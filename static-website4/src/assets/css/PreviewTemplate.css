@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --overlay-bg: rgba(13, 27, 30, 0.75);
+  --accent-color: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Theme 1: Teal Coast */
+[data-theme="teal-coast"] {
+  --overlay-bg: rgba(11, 37, 34, 0.75);
+  --accent-color: #06b6d4;
+  --accent-hover: #0891b2;
+  --bg-gradient: linear-gradient(135deg, #042f2e 0%, #115e59 100%);
+}
+
+/* Theme 2: Midnight Neon */
+[data-theme="midnight-neon"] {
+  --overlay-bg: rgba(15, 12, 30, 0.8);
+  --accent-color: #a855f7;
+  --accent-hover: #9333ea;
+  --bg-gradient: linear-gradient(135deg, #090514 0%, #2e1065 100%);
+}
+
+/* Theme 3: Sunset Warmth */
+[data-theme="sunset-warmth"] {
+  --overlay-bg: rgba(43, 20, 10, 0.75);
+  --accent-color: #f97316;
+  --accent-hover: #ea580c;
+  --bg-gradient: linear-gradient(135deg, #270505 0%, #7c2d12 100%);
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #090d16;
+}
+/* Force all content to stay within parent container */
+.preview-container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+* {
+  max-width: 100%;
+  box-sizing: border-box;
+}

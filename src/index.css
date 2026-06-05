@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────
+   GLOBAL RESET
+───────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: #090d16;
+  color: white;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+/* ─────────────────────────────────────────
+   ANIMATIONS
+───────────────────────────────────────── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+/* ─────────────────────────────────────────
+   UTILITIES
+───────────────────────────────────────── */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────
+   DASHBOARD / CARD STYLES
+───────────────────────────────────────── */
+.container {
+  padding: 40px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+}
+
+.card h2 {
+  margin-bottom: 10px;
+}
+
+.card p {
+  margin-bottom: 20px;
+}
+
+.card a {
+  display: inline-block;
+  padding: 10px 16px;
+  background: var(--accent-color);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.card a:hover {
+  background: var(--accent-hover);
+}
+@import "tailwindcss";
+
+:root {
+  --overlay-bg: rgba(13, 27, 30, 0.75);
+  --accent-color: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Theme 1: Teal Coast */
+[data-theme="teal-coast"] {
+  --overlay-bg: rgba(11, 37, 34, 0.75);
+  --accent-color: #06b6d4;
+  --accent-hover: #0891b2;
+  --bg-gradient: linear-gradient(135deg, #042f2e 0%, #115e59 100%);
+}
+
+/* Theme 2: Midnight Neon */
+[data-theme="midnight-neon"] {
+  --overlay-bg: rgba(15, 12, 30, 0.8);
+  --accent-color: #a855f7;
+  --accent-hover: #9333ea;
+  --bg-gradient: linear-gradient(135deg, #090514 0%, #2e1065 100%);
+}
+
+/* Theme 3: Sunset Warmth */
+[data-theme="sunset-warmth"] {
+  --overlay-bg: rgba(43, 20, 10, 0.75);
+  --accent-color: #f97316;
+  --accent-hover: #ea580c;
+  --bg-gradient: linear-gradient(135deg, #270505 0%, #7c2d12 100%);
+}
+/* Template 1 Themes */
+/* Theme 1: Classic Blue */
+[data-theme="classic"] {
+  --brand-primary: #1e3a8a;
+  --brand-secondary: #172554;
+  --brand-accent: #60a5fa;
+  --brand-hover: #eff6ff;
+  --overlay-bg: rgba(30, 58, 138, 0.75);
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --bg-gradient: linear-gradient(135deg, #1e3a8a 0%, #172554 100%);
+}
+
+/* Theme 2: Emerald Academy */
+[data-theme="emerald"] {
+  --brand-primary: #065f46;
+  --brand-secondary: #064e3b;
+  --brand-accent: #34d399;
+  --brand-hover: #ecfdf5;
+  --overlay-bg: rgba(6, 95, 70, 0.75);
+  --accent-color: #10b981;
+  --accent-hover: #059669;
+  --bg-gradient: linear-gradient(135deg, #065f46 0%, #064e3b 100%);
+}
+
+/* Theme 3: Imperial Crimson */
+[data-theme="crimson"] {
+  --brand-primary: #991b1b;
+  --brand-secondary: #7f1d1d;
+  --brand-accent: #f87171;
+  --brand-hover: #fef2f2;
+  --overlay-bg: rgba(153, 27, 27, 0.75);
+  --accent-color: #ef4444;
+  --accent-hover: #dc2626;
+  --bg-gradient: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #090d16;
+}
