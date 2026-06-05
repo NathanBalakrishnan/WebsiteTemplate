@@ -29,6 +29,31 @@ export default function CustomizedParent() {
     overlayBg: ''
   });
 
+  // Add text overrides state
+  const [textOverrides, setTextOverrides] = useState({
+    homeTagline: '',
+    homeDescription: '',
+    homeSubtitle: '',
+    homePrimaryCta: '',
+    aboutTitle: '',
+    aboutVision: '',
+    aboutLeadership: '',
+    aboutHistory: '',
+    aboutCampusLife: '',
+    coursesTitle: '',
+    coursesEngineering: '',
+    coursesManagement: '',
+    coursesDataScience: '',
+    coursesDesign: '',
+    achievementsTitle: '',
+    achievementsList: [],
+    contactTitle: '',
+    contactAddress: '',
+    contactPhone: '',
+    contactEmail: '',
+    navigationItems: []
+  });
+
   const location = useLocation();
   const previewRef = useRef(null);
 
@@ -41,6 +66,30 @@ export default function CustomizedParent() {
     if (selectedTemplate?.themes?.[0]) {
       setTheme(selectedTemplate.themes[0].id);
     }
+    // Reset text overrides when template changes
+    setTextOverrides({
+      homeTagline: '',
+      homeDescription: '',
+      homeSubtitle: '',
+      homePrimaryCta: '',
+      aboutTitle: '',
+      aboutVision: '',
+      aboutLeadership: '',
+      aboutHistory: '',
+      aboutCampusLife: '',
+      coursesTitle: '',
+      coursesEngineering: '',
+      coursesManagement: '',
+      coursesDataScience: '',
+      coursesDesign: '',
+      achievementsTitle: '',
+      achievementsList: [],
+      contactTitle: '',
+      contactAddress: '',
+      contactPhone: '',
+      contactEmail: '',
+      navigationItems: []
+    });
   }, [selectedTemplate]);
 
   if (!selectedTemplate) {
@@ -83,6 +132,36 @@ export default function CustomizedParent() {
 
   const handleReset = () => {
     setCustomColors(defaultColors);
+    setTextOverrides({
+      homeTagline: '',
+      homeDescription: '',
+      homeSubtitle: '',
+      homePrimaryCta: '',
+      aboutTitle: '',
+      aboutVision: '',
+      aboutLeadership: '',
+      aboutHistory: '',
+      aboutCampusLife: '',
+      coursesTitle: '',
+      coursesEngineering: '',
+      coursesManagement: '',
+      coursesDataScience: '',
+      coursesDesign: '',
+      achievementsTitle: '',
+      achievementsList: [],
+      contactTitle: '',
+      contactAddress: '',
+      contactPhone: '',
+      contactEmail: '',
+      navigationItems: []
+    });
+  };
+
+  const handleTextChangeFromPanel = (field, value) => {
+    setTextOverrides(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const overlayBg = customColors.overlayBg || defaultColors.overlayBg;
@@ -107,6 +186,53 @@ export default function CustomizedParent() {
 
   const isOverlayDesign = themeScope === "full-page";
 
+  // Prepare data with text overrides
+  const homeData = {
+    ...selectedTemplate.home,
+    tagline: textOverrides.homeTagline || selectedTemplate.home?.tagline,
+    description: textOverrides.homeDescription || selectedTemplate.home?.description,
+    subtitle: textOverrides.homeSubtitle || selectedTemplate.home?.subtitle,
+    primaryCta: textOverrides.homePrimaryCta || selectedTemplate.home?.primaryCta || selectedTemplate.home?.cta,
+  };
+
+  const aboutData = {
+    ...selectedTemplate.about,
+    title: textOverrides.aboutTitle || selectedTemplate.about?.title,
+    sections: {
+      'Our Vision': textOverrides.aboutVision || selectedTemplate.about?.sections?.['Our Vision'],
+      'Leadership': textOverrides.aboutLeadership || selectedTemplate.about?.sections?.['Leadership'],
+      'History': textOverrides.aboutHistory || selectedTemplate.about?.sections?.['History'],
+      'Campus Life': textOverrides.aboutCampusLife || selectedTemplate.about?.sections?.['Campus Life'],
+    }
+  };
+
+  const coursesData = {
+    ...selectedTemplate.courses,
+    title: textOverrides.coursesTitle || selectedTemplate.courses?.title,
+    details: {
+      'Engineering': textOverrides.coursesEngineering || selectedTemplate.courses?.details?.['Engineering'],
+      'Management': textOverrides.coursesManagement || selectedTemplate.courses?.details?.['Management'],
+      'Data Science': textOverrides.coursesDataScience || selectedTemplate.courses?.details?.['Data Science'],
+      'Design': textOverrides.coursesDesign || selectedTemplate.courses?.details?.['Design'],
+    }
+  };
+
+  const achievementsData = {
+    ...selectedTemplate.achievements,
+    title: textOverrides.achievementsTitle || selectedTemplate.achievements?.title,
+    list: textOverrides.achievementsList.length ? textOverrides.achievementsList : selectedTemplate.achievements?.list,
+  };
+
+  const contactData = {
+    ...selectedTemplate.contact,
+    title: textOverrides.contactTitle || selectedTemplate.contact?.title,
+    address: textOverrides.contactAddress || selectedTemplate.contact?.address,
+    phone: textOverrides.contactPhone || selectedTemplate.contact?.phone,
+    email: textOverrides.contactEmail || selectedTemplate.contact?.email,
+  };
+
+  const navigationData = textOverrides.navigationItems.length ? textOverrides.navigationItems : selectedTemplate.navigation;
+
   return (
     <div style={{
       display: 'flex',
@@ -117,7 +243,6 @@ export default function CustomizedParent() {
       top: 0,
       left: 0,
     }}>
-
       {/* LEFT COLUMN — Customization Panel Component */}
       <CustomizationPanel
         isOverlayDesign={isOverlayDesign}
@@ -136,9 +261,10 @@ export default function CustomizedParent() {
           headerBg,
           footerBg
         }}
-        defaultColors={defaultColors}
         onColorChange={handleColorChange}
         onReset={handleReset}
+        templateData={selectedTemplate}
+        onTextChange={handleTextChangeFromPanel}
       />
 
       {/* RIGHT COLUMN — Template Preview */}
@@ -154,7 +280,6 @@ export default function CustomizedParent() {
           position: 'relative',
         }}
       >
-
         {/* Navbar */}
         <div style={{
           flexShrink: 0,
@@ -163,7 +288,7 @@ export default function CustomizedParent() {
           zIndex: 100,
         }}>
           <Navbar
-            navData={selectedTemplate.navigation || []}
+            navData={navigationData}
             themesData={selectedTemplate.themes || []}
             activeTab={activeTab}
             templateData={selectedTemplate}
@@ -188,7 +313,6 @@ export default function CustomizedParent() {
           position: 'relative',
         }}>
           <div className={`min-h-full flex flex-col ${!isOverlayDesign ? 'bg-white' : ''}`}>
-
             {/* Background for overlay design */}
             {isOverlayDesign && (
               <>
@@ -212,7 +336,7 @@ export default function CustomizedParent() {
               <div key={activeTab} className="w-full">
                 {activeTab === 'Home' && (
                   <Home
-                    data={selectedTemplate.home}
+                    data={homeData}
                     styles={selectedTemplate.styles?.home}
                     isOverlayDesign={isOverlayDesign}
                     accentColor={accentColor}
@@ -223,7 +347,7 @@ export default function CustomizedParent() {
                 )}
                 {activeTab === 'About Us' && (
                   <About
-                    data={selectedTemplate.about}
+                    data={aboutData}
                     styles={selectedTemplate.styles?.about}
                     isOverlayDesign={isOverlayDesign}
                     accentColor={accentColor}
@@ -235,7 +359,7 @@ export default function CustomizedParent() {
                 )}
                 {activeTab === 'Courses' && (
                   <Courses
-                    data={selectedTemplate.courses}
+                    data={coursesData}
                     styles={selectedTemplate.styles?.courses}
                     isOverlayDesign={isOverlayDesign}
                     accentColor={accentColor}
@@ -247,7 +371,7 @@ export default function CustomizedParent() {
                 )}
                 {activeTab === 'Achievements' && (
                   <Achievements
-                    data={selectedTemplate.achievements}
+                    data={achievementsData}
                     styles={selectedTemplate.styles?.achievements}
                     isOverlayDesign={isOverlayDesign}
                     accentColor={accentColor}
@@ -259,7 +383,7 @@ export default function CustomizedParent() {
                 )}
                 {activeTab === 'Contact' && (
                   <Contact
-                    data={selectedTemplate.contact}
+                    data={contactData}
                     styles={selectedTemplate.styles?.contact}
                     isOverlayDesign={isOverlayDesign}
                     accentColor={accentColor}
@@ -287,7 +411,6 @@ export default function CustomizedParent() {
                 © {new Date().getFullYear()} Horizon Institute. All content pulled dynamically via JSON.
               </div>
             </footer>
-
           </div>
         </div>
       </div>

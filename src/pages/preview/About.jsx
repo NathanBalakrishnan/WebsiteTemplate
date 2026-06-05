@@ -7,6 +7,7 @@ export default function About({ data, styles, isOverlayDesign = false, accentCol
           style={{ color: accentColor || "#06b6d4" }}
         >
           {data.title}
+        
         </h1>
         <div className="grid md:grid-cols-2 gap-6">
           {Object.entries(data.sections).map(([key, value]) => (
