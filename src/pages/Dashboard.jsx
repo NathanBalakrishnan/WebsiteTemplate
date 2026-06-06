@@ -16,7 +16,7 @@ export default function DashboardLayout() {
         <aside className="sidebar">
           <ul>
             <li>Home</li>
-            <li>About</li>
+            <li>Templates</li>
           </ul>
         </aside>
 
