@@ -1,250 +1,388 @@
-[
-  {
-    "templateId": 1,
-    "title": "HORIZON COLLEGE",
-    "image": "../src/assets/template-image/template1.png",
-    "description": "Educational institution website with courses and admissions.",
-    "themeScope": "header-footer",
-    "styles": {
-      "navbar": {
-        "background": "#16275B",
-        "logoColor": "#ffffff",
-        "menuColor": "#ffffff",
-        "menuGap": "32px",
-        "paddingTop": "0px",
-        "sticky": true,
-        "height": "80px",
-        "shadow": "0 4px 20px rgba(0,0,0,0.1)"
+  [
+    {
+      "templateId": 1,
+      "title": "HORIZON COLLEGE",
+      "image": "../src/assets/template-image/template1.png",
+      "description": "Educational institution website with courses and admissions.",
+      "themeScope": "header-footer",
+      "styles": {
+        "navbar": {
+          "background": "#16275B",
+          "logoColor": "#ffffff",
+          "menuColor": "#ffffff",
+          "menuGap": "32px",
+          "paddingTop": "0px",
+          "sticky": true,
+          "height": "80px",
+          "shadow": "0 4px 20px rgba(0,0,0,0.1)"
+        },
+        "home": {
+          "layout": "center",
+          "titleSize": "48px",
+          "descriptionSize": "18px",
+          "buttonText": "#ffffff",
+          "sectionPaddingTop": "80px"
+        }
       },
+      "themes": [
+        {
+          "id": "classic",
+          "name": "Classic Blue",
+          "headerBg": "#16275B",
+          "footerBg": "#16275B",
+          "logoColor": "#FFFFFF",
+          "menuColor": "#FFFFFF",
+          "menuHoverColor": "#38BDF8",
+          "primaryColor": "#1e3a8a",
+          "secondaryColor": "#3b82f6",
+          "textColor": "#1f2937",
+          "descriptionColor": "#4b5563",
+          "cardBg": "#ffffff",
+          "cardBorder": "#e2e8f0",
+          "buttonBg": "#1e3a8a"
+        },
+        {
+          "id": "emerald",
+          "name": "Emerald Academy",
+          "headerBg": "#065f46",
+          "footerBg": "#065f46",
+          "logoColor": "#FFFFFF",
+          "menuColor": "#FFFFFF",
+          "menuHoverColor": "#34D399",
+          "primaryColor": "#065f46",
+          "secondaryColor": "#10b981",
+          "textColor": "#1f2937",
+          "descriptionColor": "#4b5563",
+          "cardBg": "#ffffff",
+          "cardBorder": "#e2e8f0",
+          "buttonBg": "#065f46"
+        },
+        {
+          "id": "crimson",
+          "name": "Imperial Crimson",
+          "headerBg": "#991b1b",
+          "footerBg": "#991b1b",
+          "logoColor": "#FFFFFF",
+          "menuColor": "#FFFFFF",
+          "menuHoverColor": "#F87171",
+          "primaryColor": "#991b1b",
+          "secondaryColor": "#ef4444",
+          "textColor": "#1f2937",
+          "descriptionColor": "#4b5563",
+          "cardBg": "#ffffff",
+          "cardBorder": "#e2e8f0",
+          "buttonBg": "#991b1b"
+        }
+      ],
+      "navigation": [
+        { "name": "Home", "label": "Home", "type": "link" },
+        {
+          "name": "About Us",
+          "label": "About Us",
+          "type": "dropdown",
+          "menuItems": ["Our Vision", "Leadership", "History", "Campus Life"]
+        },
+        {
+          "name": "Courses",
+          "label": "Courses",
+          "type": "dropdown",
+          "menuItems": ["Engineering", "Management", "Data Science", "Design"]
+        },
+        { "name": "Achievements", "label": "Achievements", "type": "link" },
+        { "name": "Contact", "label": "Contact", "type": "link" }
+      ],
       "home": {
-        "layout": "center",
-        "titleSize": "48px",
-        "descriptionSize": "18px",
-        "buttonText": "#ffffff",
-        "sectionPaddingTop": "80px"
+        "tagline": "Welcome to Horizon Institute of Technology",
+        "description": "The sudden hunch, the creative leap of mind that \"sees\" in a flash how to solve a problem in a simple way, is something quite different.",
+        "subtitle": "Empowering minds, shaping futures, and driving innovation since 1995.",
+        "primaryCta": "Explore Our Programs",
+        "cta": "Explore Our Programs",
+        "image": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80"
+      },
+      "about": {
+        "title": "About Our Institution",
+        "sections": {
+          "Our Vision": "To be a global leader in education, fostering creativity and technical excellence.",
+          "Leadership": "Led by world-class educators and industry veterans dedicated to student success.",
+          "History": "Founded in 1995, we have graduated over 20,000 students who now lead global enterprises.",
+          "Campus Life": "A vibrant 50-acre campus equipped with modern labs, sports complexes, and creative hubs."
+        }
+      },
+      "courses": {
+        "title": "Academic Programs Offered",
+        "details": {
+          "Engineering": "B.Tech & M.Tech programs in CSE, ECE, and Mechanical Engineering.",
+          "Management": "MBA programs focusing on Data Analytics, Marketing, and Global Finance.",
+          "Data Science": "Specialized certifications and degrees in AI, Machine Learning, and Big Data.",
+          "Design": "B.Des in UI/UX Design, Fashion, and Industrial Product Design."
+        }
+      },
+      "achievements": {
+        "title": "Milestones & Recognition",
+        "list": [
+          "Ranked Top 10 National Engineering Colleges in 2025.",
+          "94% Placement rate with top Fortune 500 companies.",
+          "Over $5M secured in research grants this year alone.",
+          "Winner of the National Green Campus Award."
+        ]
+      },
+      "contact": {
+        "title": "Get in Touch",
+        "address": "123 Education Lane, Tech City, TC 56001",
+        "phone": "+1 (555) 019-2834",
+        "email": "admissions@horizoninstitute.edu"
       }
     },
-    "themes": [
-      {
-        "id": "classic",
-        "name": "Classic Blue",
-        "headerBg": "#16275B",
-        "footerBg": "#16275B",
-        "logoColor": "#FFFFFF",
-        "menuColor": "#FFFFFF",
-        "menuHoverColor": "#38BDF8",
-        "primaryColor": "#1e3a8a",
-        "secondaryColor": "#3b82f6",
-        "textColor": "#1f2937",
-        "descriptionColor": "#4b5563",
-        "cardBg": "#ffffff",
-        "cardBorder": "#e2e8f0",
-        "buttonBg": "#1e3a8a"
+    {
+      "templateId": 2,
+      "title": "SLIDES",
+      "image": "../src/assets/template-image/template2.png",
+      "description": "Modern overlay design with background images.",
+      "themeScope": "full-page",
+      "styles": {
+        "navbar": {
+          "background": "transparent",
+          "logoColor": "#ffffff",
+          "menuColor": "#ffffff",
+          "menuGap": "32px",
+          "paddingTop": "24px"
+        },
+        "home": {
+          "layout": "split",
+          "titleColor": "#ffffff",
+          "titleSize": "64px",
+          "descriptionColor": "#d1d5db",
+          "descriptionSize": "18px",
+          "buttonBg": "#06b6d4",
+          "buttonText": "#ffffff",
+          "secondaryButtonBg": "#ffffff",
+          "secondaryButtonText": "#374151",
+          "imageWidth": "500px"
+        }
       },
-      {
-        "id": "emerald",
-        "name": "Emerald Academy",
-        "headerBg": "#065f46",
-        "footerBg": "#065f46",
-        "logoColor": "#FFFFFF",
-        "menuColor": "#FFFFFF",
-        "menuHoverColor": "#34D399",
-        "primaryColor": "#065f46",
-        "secondaryColor": "#10b981",
-        "textColor": "#1f2937",
-        "descriptionColor": "#4b5563",
-        "cardBg": "#ffffff",
-        "cardBorder": "#e2e8f0",
-        "buttonBg": "#065f46"
+      "themes": [
+        {
+          "id": "teal-coast",
+          "name": "Teal Coast",
+          "overlayBg": "rgba(11, 37, 34, 0.75)",
+          "accentColor": "#06b6d4",
+          "accentHover": "#0891b2",
+          "buttonBg": "#06b6d4",
+          "cardBg": "rgba(255,255,255,0.1)"
+        },
+        {
+          "id": "midnight-neon",
+          "name": "Midnight Neon",
+          "overlayBg": "rgba(15, 12, 30, 0.8)",
+          "accentColor": "#a855f7",
+          "accentHover": "#9333ea",
+          "buttonBg": "#a855f7",
+          "cardBg": "rgba(168, 85, 247, 0.1)"
+        },
+        {
+          "id": "sunset-warmth",
+          "name": "Sunset Warmth",
+          "overlayBg": "rgba(43, 20, 10, 0.75)",
+          "accentColor": "#f97316",
+          "accentHover": "#ea580c",
+          "buttonBg": "#f97316",
+          "cardBg": "rgba(249, 115, 22, 0.1)"
+        }
+      ],
+      "navigation": [
+        { "name": "Home", "label": "Home", "type": "link" },
+        {
+          "name": "About Us",
+          "label": "About Us",
+          "type": "dropdown",
+          "menuItems": ["Our Vision", "Leadership", "History", "Campus Life"]
+        },
+        {
+          "name": "Courses",
+          "label": "Courses",
+          "type": "dropdown",
+          "menuItems": ["Engineering", "Management", "Data Science", "Design"]
+        },
+        { "name": "Achievements", "label": "Achievements", "type": "link" },
+        { "name": "Contact", "label": "Contact", "type": "link" }
+      ],
+      "home": {
+        "tagline": "Designers are meant to be loved, not to be understood.",
+        "description": "The sudden hunch, the creative leap of mind that \"sees\" in a flash how to solve a problem in a simple way, is something quite different.",
+        "primaryCta": "Get Started",
+        "secondaryCta": "Learn more",
+        "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
       },
-      {
-        "id": "crimson",
-        "name": "Imperial Crimson",
-        "headerBg": "#991b1b",
-        "footerBg": "#991b1b",
-        "logoColor": "#FFFFFF",
-        "menuColor": "#FFFFFF",
-        "menuHoverColor": "#F87171",
-        "primaryColor": "#991b1b",
-        "secondaryColor": "#ef4444",
-        "textColor": "#1f2937",
-        "descriptionColor": "#4b5563",
-        "cardBg": "#ffffff",
-        "cardBorder": "#e2e8f0",
-        "buttonBg": "#991b1b"
+      "about": {
+        "title": "About Our Institution",
+        "sections": {
+          "Our Vision": "To be a global leader in education, fostering creativity and technical excellence.",
+          "Leadership": "Led by world-class educators and industry veterans dedicated to student success.",
+          "History": "Founded in 1995, we have graduated over 20,000 students who now lead global enterprises.",
+          "Campus Life": "A vibrant 50-acre campus equipped with modern labs, sports complexes, and creative hubs."
+        }
+      },
+      "courses": {
+        "title": "Academic Programs Offered",
+        "details": {
+          "Engineering": "B.Tech & M.Tech programs in CSE, ECE, and Mechanical Engineering.",
+          "Management": "MBA programs focusing on Data Analytics, Marketing, and Global Finance.",
+          "Data Science": "Specialized certifications and degrees in AI, Machine Learning, and Big Data.",
+          "Design": "B.Des in UI/UX Design, Fashion, and Industrial Product Design."
+        }
+      },
+      "achievements": {
+        "title": "Milestones & Recognition",
+        "list": [
+          "Ranked Top 10 National Engineering Colleges in 2025.",
+          "94% Placement rate with top Fortune 500 companies.",
+          "Over $5M secured in research grants this year alone.",
+          "Winner of the National Green Campus Award."
+        ]
+      },
+      "contact": {
+        "title": "Get in Touch",
+        "address": "123 Education Lane, Tech City, TC 56001",
+        "phone": "+1 (555) 019-2834",
+        "email": "admissions@horizoninstitute.edu"
       }
-    ],
-    "navigation": [
-      { "name": "Home", "label": "Home", "type": "link" },
-      {
-        "name": "About Us",
-        "label": "About Us",
-        "type": "dropdown",
-        "menuItems": ["Our Vision", "Leadership", "History", "Campus Life"]
-      },
-      {
-        "name": "Courses",
-        "label": "Courses",
-        "type": "dropdown",
-        "menuItems": ["Engineering", "Management", "Data Science", "Design"]
-      },
-      { "name": "Achievements", "label": "Achievements", "type": "link" },
-      { "name": "Contact", "label": "Contact", "type": "link" }
-    ],
-    "home": {
-      "tagline": "Welcome to Horizon Institute of Technology",
-      "description": "The sudden hunch, the creative leap of mind that \"sees\" in a flash how to solve a problem in a simple way, is something quite different.",
-      "subtitle": "Empowering minds, shaping futures, and driving innovation since 1995.",
-      "primaryCta": "Explore Our Programs",
-      "cta": "Explore Our Programs",
-      "image": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80"
     },
-    "about": {
-      "title": "About Our Institution",
-      "sections": {
-        "Our Vision": "To be a global leader in education, fostering creativity and technical excellence.",
-        "Leadership": "Led by world-class educators and industry veterans dedicated to student success.",
-        "History": "Founded in 1995, we have graduated over 20,000 students who now lead global enterprises.",
-        "Campus Life": "A vibrant 50-acre campus equipped with modern labs, sports complexes, and creative hubs."
-      }
-    },
-    "courses": {
-      "title": "Academic Programs Offered",
-      "details": {
-        "Engineering": "B.Tech & M.Tech programs in CSE, ECE, and Mechanical Engineering.",
-        "Management": "MBA programs focusing on Data Analytics, Marketing, and Global Finance.",
-        "Data Science": "Specialized certifications and degrees in AI, Machine Learning, and Big Data.",
-        "Design": "B.Des in UI/UX Design, Fashion, and Industrial Product Design."
-      }
-    },
-    "achievements": {
-      "title": "Milestones & Recognition",
-      "list": [
-        "Ranked Top 10 National Engineering Colleges in 2025.",
-        "94% Placement rate with top Fortune 500 companies.",
-        "Over $5M secured in research grants this year alone.",
-        "Winner of the National Green Campus Award."
-      ]
-    },
-    "contact": {
-      "title": "Get in Touch",
-      "address": "123 Education Lane, Tech City, TC 56001",
-      "phone": "+1 (555) 019-2834",
-      "email": "admissions@horizoninstitute.edu"
-    }
-  },
   {
-    "templateId": 2,
-    "title": "SLIDES",
-    "image": "../src/assets/template-image/template2.png",
+    "templateId": 3,
+    "title": "Shopping Cart",
+    "themeScope": "shopping-cart",
+    "image": "../src/assets/template-image/template3.png",
     "description": "Modern overlay design with background images.",
-    "themeScope": "full-page",
-    "styles": {
-      "navbar": {
-        "background": "transparent",
-        "logoColor": "#ffffff",
-        "menuColor": "#ffffff",
-        "menuGap": "32px",
-        "paddingTop": "24px"
-      },
-      "home": {
-        "layout": "split",
-        "titleColor": "#ffffff",
-        "titleSize": "64px",
-        "descriptionColor": "#d1d5db",
-        "descriptionSize": "18px",
-        "buttonBg": "#06b6d4",
-        "buttonText": "#ffffff",
-        "secondaryButtonBg": "#ffffff",
-        "secondaryButtonText": "#374151",
-        "imageWidth": "500px"
-      }
+    "shoppingContent": {
+      "heroTitle": "Organic Foods at your Doorsteps",
+      "heroSubtitle": "Fresh, healthy, and delicious groceries delivered to your home",
+      "buttonStart": "START SHOPPING",
+      "buttonJoin": "JOIN NOW",
+      "stat1Label": "PRODUCTS",
+      "stat2Label": "HAPPY CUSTOMERS",
+      "stat3Label": "STORES",
+      "categoriesTitle": "Shop by Category",
+      "productsTitle": "Featured Products",
+      "searchPlaceholder": "Search products..."
     },
     "themes": [
+      { "id": "teal", "name": "Teal Coast" },
+      { "id": "purple", "name": "Midnight Neon" },
+      { "id": "orange", "name": "Sunset Warmth" }
+    ],
+    "categories": [
+      { "id": 1, "name": "Fruits", "icon": "🍎", "slug": "fruits" },
+      { "id": 2, "name": "Vegetables", "icon": "🥬", "slug": "vegetables" },
+      { "id": 3, "name": "Dairy", "icon": "🥛", "slug": "dairy" },
+      { "id": 4, "name": "Meat", "icon": "🍗", "slug": "meat" },
+      { "id": 5, "name": "Bakery", "icon": "🥖", "slug": "bakery" },
+      { "id": 6, "name": "Beverages", "icon": "🥤", "slug": "beverages" }
+    ],
+    "products": [
       {
-        "id": "teal-coast",
-        "name": "Teal Coast",
-        "overlayBg": "rgba(11, 37, 34, 0.75)",
-        "accentColor": "#06b6d4",
-        "accentHover": "#0891b2",
-        "buttonBg": "#06b6d4",
-        "cardBg": "rgba(255,255,255,0.1)"
+        "id": 1,
+        "name": "Organic Bananas",
+        "category": "Fruits",
+        "price": 4.99,
+        "oldPrice": 6.99,
+        "unit": "bunch",
+        "image": "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=300",
+        "organic": true,
+        "rating": 5
       },
       {
-        "id": "midnight-neon",
-        "name": "Midnight Neon",
-        "overlayBg": "rgba(15, 12, 30, 0.8)",
-        "accentColor": "#a855f7",
-        "accentHover": "#9333ea",
-        "buttonBg": "#a855f7",
-        "cardBg": "rgba(168, 85, 247, 0.1)"
+        "id": 2,
+        "name": "Fresh Strawberries",
+        "category": "Fruits",
+        "price": 5.99,
+        "oldPrice": 8.99,
+        "unit": "250g",
+        "image": "https://images.unsplash.com/photo-1464965911861-746a04b4bca5?w=300",
+        "organic": true,
+        "rating": 5
       },
       {
-        "id": "sunset-warmth",
-        "name": "Sunset Warmth",
-        "overlayBg": "rgba(43, 20, 10, 0.75)",
-        "accentColor": "#f97316",
-        "accentHover": "#ea580c",
-        "buttonBg": "#f97316",
-        "cardBg": "rgba(249, 115, 22, 0.1)"
+        "id": 3,
+        "name": "Organic Avocado",
+        "category": "Fruits",
+        "price": 3.49,
+        "oldPrice": 5.49,
+        "unit": "each",
+        "image": "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=300",
+        "organic": true,
+        "rating": 4
+      },
+      {
+        "id": 4,
+        "name": "Fresh Broccoli",
+        "category": "Vegetables",
+        "price": 2.99,
+        "oldPrice": 4.99,
+        "unit": "each",
+        "image": "https://images.unsplash.com/photo-1584270354949-c26b0d5b4a0c?w=300",
+        "organic": true,
+        "rating": 4
+      },
+      {
+        "id": 5,
+        "name": "Organic Milk",
+        "category": "Dairy",
+        "price": 4.49,
+        "oldPrice": 5.99,
+        "unit": "1L",
+        "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300",
+        "organic": true,
+        "rating": 5
+      },
+      {
+        "id": 6,
+        "name": "Free Range Eggs",
+        "category": "Dairy",
+        "price": 5.99,
+        "oldPrice": 7.99,
+        "unit": "dozen",
+        "image": "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=300",
+        "organic": false,
+        "rating": 4
+      },
+      {
+        "id": 7,
+        "name": "Chicken Breast",
+        "category": "Meat",
+        "price": 8.99,
+        "oldPrice": 11.99,
+        "unit": "500g",
+        "image": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=300",
+        "organic": true,
+        "rating": 5
+      },
+      {
+        "id": 8,
+        "name": "Sourdough Bread",
+        "category": "Bakery",
+        "price": 4.99,
+        "oldPrice": 6.99,
+        "unit": "loaf",
+        "image": "https://images.unsplash.com/photo-1585478259715-876acc5be8eb?w=300",
+        "organic": true,
+        "rating": 5
+      },
+      {
+        "id": 9,
+        "name": "Orange Juice",
+        "category": "Beverages",
+        "price": 3.99,
+        "oldPrice": 5.99,
+        "unit": "1L",
+        "image": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=300",
+        "organic": false,
+        "rating": 4
       }
     ],
-    "navigation": [
-      { "name": "Home", "label": "Home", "type": "link" },
-      {
-        "name": "About Us",
-        "label": "About Us",
-        "type": "dropdown",
-        "menuItems": ["Our Vision", "Leadership", "History", "Campus Life"]
-      },
-      {
-        "name": "Courses",
-        "label": "Courses",
-        "type": "dropdown",
-        "menuItems": ["Engineering", "Management", "Data Science", "Design"]
-      },
-      { "name": "Achievements", "label": "Achievements", "type": "link" },
-      { "name": "Contact", "label": "Contact", "type": "link" }
-    ],
-    "home": {
-      "tagline": "Designers are meant to be loved, not to be understood.",
-      "description": "The sudden hunch, the creative leap of mind that \"sees\" in a flash how to solve a problem in a simple way, is something quite different.",
-      "primaryCta": "Get Started",
-      "secondaryCta": "Learn more",
-      "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
-    },
-    "about": {
-      "title": "About Our Institution",
-      "sections": {
-        "Our Vision": "To be a global leader in education, fostering creativity and technical excellence.",
-        "Leadership": "Led by world-class educators and industry veterans dedicated to student success.",
-        "History": "Founded in 1995, we have graduated over 20,000 students who now lead global enterprises.",
-        "Campus Life": "A vibrant 50-acre campus equipped with modern labs, sports complexes, and creative hubs."
-      }
-    },
-    "courses": {
-      "title": "Academic Programs Offered",
-      "details": {
-        "Engineering": "B.Tech & M.Tech programs in CSE, ECE, and Mechanical Engineering.",
-        "Management": "MBA programs focusing on Data Analytics, Marketing, and Global Finance.",
-        "Data Science": "Specialized certifications and degrees in AI, Machine Learning, and Big Data.",
-        "Design": "B.Des in UI/UX Design, Fashion, and Industrial Product Design."
-      }
-    },
-    "achievements": {
-      "title": "Milestones & Recognition",
-      "list": [
-        "Ranked Top 10 National Engineering Colleges in 2025.",
-        "94% Placement rate with top Fortune 500 companies.",
-        "Over $5M secured in research grants this year alone.",
-        "Winner of the National Green Campus Award."
-      ]
-    },
-    "contact": {
-      "title": "Get in Touch",
-      "address": "123 Education Lane, Tech City, TC 56001",
-      "phone": "+1 (555) 019-2834",
-      "email": "admissions@horizoninstitute.edu"
+    "stats": {
+      "products": 9000,
+      "customers": 50000,
+      "stores": 25
     }
   }
-]
+  ]

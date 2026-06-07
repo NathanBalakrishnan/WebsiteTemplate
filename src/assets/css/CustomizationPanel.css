@@ -131,23 +131,27 @@
 
 /* Color Picker Row */
 .color-picker-row {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  transition: all 0.2s;
 }
 
 .color-picker-label {
   display: flex;
   align-items: center;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: #374151;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .color-swatch {
   display: inline-block;
-  width: 24px;
-  height: 24px;
-  border-radius: 100%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   margin-left: 8px;
@@ -157,36 +161,42 @@
 .color-picker-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
 }
 
 .color-picker {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   border: 3px solid #e5e7eb;
   cursor: pointer;
   padding: 0;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .color-picker:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .color-value {
-  font-size: 12px;
-  color: #6b7280;
+  font-size: 13px;
+  color: #1f2937;
   font-family: monospace;
+  background-color: #fff;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  flex: 1;
 }
 
 .color-description {
-  margin-top: 4px;
+  margin-top: 8px;
   font-size: 11px;
   color: #9ca3af;
+  padding-left: 4px;
 }
 
 /* Sample Text */
@@ -197,16 +207,20 @@
   background-color: #f3f4f6;
   font-size: 13px;
   text-align: center;
+  font-weight: 500;
 }
 
 /* Overlay Color Section */
 .overlay-color-section {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #f9fafb;
+  border-radius: 12px;
 }
 
 .overlay-input-group {
   display: flex;
-  gap: 12px;
+  gap: 15px;
   align-items: center;
   margin-bottom: 12px;
 }
@@ -223,6 +237,18 @@
   width: 100%;
   margin-top: 8px;
   cursor: pointer;
+  height: 4px;
+  border-radius: 2px;
+  background: #e5e7eb;
+}
+
+.opacity-slider::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6366f1;
+  cursor: pointer;
+  border: none;
 }
 
 /* Input Styles */
@@ -313,7 +339,7 @@
 
 /* Form Group */
 .form-group {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .form-label {
@@ -321,12 +347,12 @@
   font-weight: 500;
   color: #374151;
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 /* Achievement Item */
 .achievement-item {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .achievement-label {
@@ -364,4 +390,47 @@
   padding: 0;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Preview Sample */
+.preview-sample {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.sample-button {
+  margin-top: 10px;
+  padding: 8px 20px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.sample-button:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+/* Scrollbar */
+.customization-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.customization-panel::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+
+.customization-panel::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 10px;
+}
+
+.customization-panel::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
