@@ -10,11 +10,18 @@ const CustomizationPanel = ({
   onReset,
   templateData,
   onTextChange,
+  onExportJSON,
+  user,
+  onExportAll,
+  onResetToOriginal,
+  isSaving,
+  hasUnsavedChanges,
+  lastSaved
 }) => {
   const [activeMainTab, setActiveMainTab] = useState("colors");
   const [activeColorSubTab, setActiveColorSubTab] = useState("theme");
   const [activeTemplate1SubTab, setActiveTemplate1SubTab] = useState("brand");
-  
+
   const isShoppingCart = templateData?.themeScope === "shopping-cart";
 
   // Local state for text opacity
@@ -156,10 +163,76 @@ const CustomizationPanel = ({
     }
   };
 
+  // Navigation handlers
+  const handleNavigationNameChange = (index, value) => {
+    const updatedNav = [...textContent.navigationItems];
+    updatedNav[index] = { ...updatedNav[index], name: value };
+    setTextContent(prev => ({ ...prev, navigationItems: updatedNav }));
+    if (onTextChange) {
+      onTextChange("navigationItems", updatedNav);
+    }
+  };
+
   const handleNavigationChange = (index, value) => {
     const updatedNav = [...textContent.navigationItems];
     updatedNav[index] = { ...updatedNav[index], label: value };
-    setTextContent((prev) => ({ ...prev, navigationItems: updatedNav }));
+    setTextContent(prev => ({ ...prev, navigationItems: updatedNav }));
+    if (onTextChange) {
+      onTextChange("navigationItems", updatedNav);
+    }
+  };
+
+  const handleNavigationTypeChange = (index, value) => {
+    const updatedNav = [...textContent.navigationItems];
+    updatedNav[index] = { 
+      ...updatedNav[index], 
+      type: value,
+      menuItems: value === 'dropdown' ? (updatedNav[index].menuItems || ["New Item"]) : undefined
+    };
+    setTextContent(prev => ({ ...prev, navigationItems: updatedNav }));
+    if (onTextChange) {
+      onTextChange("navigationItems", updatedNav);
+    }
+  };
+
+  const handleAddNavItem = () => {
+    const newItem = {
+      name: "New Menu",
+      label: "New Menu",
+      type: "link",
+      menuItems: []
+    };
+    const updatedNav = [...textContent.navigationItems, newItem];
+    setTextContent(prev => ({ ...prev, navigationItems: updatedNav }));
+    if (onTextChange) {
+      onTextChange("navigationItems", updatedNav);
+    }
+  };
+
+  const handleRemoveNavItem = (index) => {
+    const updatedNav = textContent.navigationItems.filter((_, i) => i !== index);
+    setTextContent(prev => ({ ...prev, navigationItems: updatedNav }));
+    if (onTextChange) {
+      onTextChange("navigationItems", updatedNav);
+    }
+  };
+
+  const handleAddDropdownItem = (navIndex) => {
+    const updatedNav = [...textContent.navigationItems];
+    if (!updatedNav[navIndex].menuItems) {
+      updatedNav[navIndex].menuItems = [];
+    }
+    updatedNav[navIndex].menuItems.push(`New Item ${updatedNav[navIndex].menuItems.length + 1}`);
+    setTextContent(prev => ({ ...prev, navigationItems: updatedNav }));
+    if (onTextChange) {
+      onTextChange("navigationItems", updatedNav);
+    }
+  };
+
+  const handleRemoveDropdownItem = (navIndex, menuItemIndex) => {
+    const updatedNav = [...textContent.navigationItems];
+    updatedNav[navIndex].menuItems = updatedNav[navIndex].menuItems.filter((_, i) => i !== menuItemIndex);
+    setTextContent(prev => ({ ...prev, navigationItems: updatedNav }));
     if (onTextChange) {
       onTextChange("navigationItems", updatedNav);
     }
@@ -167,12 +240,10 @@ const CustomizationPanel = ({
 
   const handleDropdownItemsChange = (navIndex, menuItemIndex, value) => {
     const updatedNav = [...textContent.navigationItems];
-    if (updatedNav[navIndex].menuItems) {
-      updatedNav[navIndex].menuItems[menuItemIndex] = value;
-      setTextContent((prev) => ({ ...prev, navigationItems: updatedNav }));
-      if (onTextChange) {
-        onTextChange("navigationItems", updatedNav);
-      }
+    updatedNav[navIndex].menuItems[menuItemIndex] = value;
+    setTextContent(prev => ({ ...prev, navigationItems: updatedNav }));
+    if (onTextChange) {
+      onTextChange("navigationItems", updatedNav);
     }
   };
 
@@ -363,9 +434,46 @@ const CustomizationPanel = ({
     <div className="customization-panel">
       <div className="panel-header">
         <h1 className="panel-title">🎨 Customize Your Template</h1>
-        <button onClick={onReset} className="reset-button">
-          🔄 Reset All to Default
-        </button>
+        
+        {/* Save Status Indicators */}
+        <div className="save-status-container">
+          {isSaving && (
+            <div className="saving-indicator">
+              <span className="saving-spinner"></span>
+              Saving...
+            </div>
+          )}
+          {hasUnsavedChanges && !isSaving && (
+            <div className="unsaved-indicator">
+              ⚡ Unsaved changes
+            </div>
+          )}
+          {lastSaved && !hasUnsavedChanges && !isSaving && (
+            <div className="saved-indicator">
+              ✓ Saved at {lastSaved.toLocaleTimeString()}
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="button-group">
+          <button onClick={onReset} className="reset-button">
+            🔄 Reset Current Tab
+          </button>
+          {onResetToOriginal && (
+            <button onClick={onResetToOriginal} className="reset-original-button">
+              🔄 Reset to Original Template
+            </button>
+          )}
+          <button onClick={onExportJSON} className="export-button">
+            📥 Export This Template
+          </button>
+          {user && onExportAll && (
+            <button onClick={onExportAll} className="export-all-button">
+              📦 Export All My Templates
+            </button>
+          )}
+        </div>
 
         <div className="main-tabs">
           <button
@@ -390,57 +498,97 @@ const CustomizationPanel = ({
           {isShoppingCart && (
             <div className="section">
               <h3 className="section-title">🎨 Theme Colors</h3>
-              
+
               <ColorPickerRow
                 label="Accent Color"
-                color={customColors.accentColor || '#14b8a6'}
+                color={customColors.accentColor || "#14b8a6"}
                 onChange={(e) => onColorChange("accentColor", e.target.value)}
                 description="Primary brand color for buttons, icons, and highlights"
               />
-              
+
               <div className="color-picker-row">
                 <label className="color-picker-label">
                   Button Background
-                  <span className="color-swatch" style={{ backgroundColor: customColors.buttonBg || '#14b8a6' }} />
+                  <span
+                    className="color-swatch"
+                    style={{ backgroundColor: customColors.buttonBg || "#14b8a6" }}
+                  />
                 </label>
                 <div className="color-picker-container">
-                  <input type="color" value={rgbaToHex(customColors.buttonBg || '#14b8a6')} onChange={(e) => onColorChange("buttonBg", e.target.value)} className="color-picker" />
-                  <span className="color-value">{customColors.buttonBg || '#14b8a6'}</span>
+                  <input
+                    type="color"
+                    value={rgbaToHex(customColors.buttonBg || "#14b8a6")}
+                    onChange={(e) => onColorChange("buttonBg", e.target.value)}
+                    className="color-picker"
+                  />
+                  <span className="color-value">{customColors.buttonBg || "#14b8a6"}</span>
                 </div>
                 <div className="color-description">Background color for all buttons</div>
               </div>
-              
+
               <div className="color-picker-row">
                 <label className="color-picker-label">
                   Text Color
-                  <span className="color-swatch" style={{ backgroundColor: rgbaToHex(customColors.textColor || '#1f2937') }} />
+                  <span
+                    className="color-swatch"
+                    style={{ backgroundColor: rgbaToHex(customColors.textColor || "#1f2937") }}
+                  />
                 </label>
                 <div className="color-picker-container">
-                  <input type="color" value={rgbaToHex(customColors.textColor || '#1f2937')} onChange={(e) => handleTextColorChange(e.target.value)} className="color-picker" />
-                  <span className="color-value">{customColors.textColor || '#1f2937'}</span>
+                  <input
+                    type="color"
+                    value={rgbaToHex(customColors.textColor || "#1f2937")}
+                    onChange={(e) => handleTextColorChange(e.target.value)}
+                    className="color-picker"
+                  />
+                  <span className="color-value">{customColors.textColor || "#1f2937"}</span>
                 </div>
                 <label className="opacity-label">Text Opacity: {Math.round(textOpacity * 100)}%</label>
-                <input type="range" min="0" max="1" step="0.01" value={textOpacity} onChange={handleTextOpacityChange} className="opacity-slider" />
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={textOpacity}
+                  onChange={handleTextOpacityChange}
+                  className="opacity-slider"
+                />
                 <div className="color-description">Main text color across the website</div>
               </div>
-              
+
               <div className="color-picker-row">
                 <label className="color-picker-label">
                   Card Background
-                  <span className="color-swatch" style={{ backgroundColor: rgbaToHex(customColors.cardBg || 'rgba(255,255,255,0.1)') }} />
+                  <span
+                    className="color-swatch"
+                    style={{ backgroundColor: rgbaToHex(customColors.cardBg || "rgba(255,255,255,0.1)") }}
+                  />
                 </label>
                 <div className="color-picker-container">
-                  <input type="color" value={rgbaToHex(customColors.cardBg || 'rgba(255,255,255,0.1)')} onChange={(e) => handleCardBgColorChange(e.target.value)} className="color-picker" />
-                  <span className="color-value">{customColors.cardBg || 'rgba(255,255,255,0.1)'}</span>
+                  <input
+                    type="color"
+                    value={rgbaToHex(customColors.cardBg || "rgba(255,255,255,0.1)")}
+                    onChange={(e) => handleCardBgColorChange(e.target.value)}
+                    className="color-picker"
+                  />
+                  <span className="color-value">{customColors.cardBg || "rgba(255,255,255,0.1)"}</span>
                 </div>
                 <label className="opacity-label">Card Opacity: {Math.round(cardBgOpacity * 100)}%</label>
-                <input type="range" min="0" max="1" step="0.01" value={cardBgOpacity} onChange={handleCardBgOpacityChange} className="opacity-slider" />
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={cardBgOpacity}
+                  onChange={handleCardBgOpacityChange}
+                  className="opacity-slider"
+                />
                 <div className="color-description">Background color and opacity for product cards</div>
               </div>
-              
+
               <ColorPickerRow
                 label="Card Border"
-                color={customColors.cardBorder || 'rgba(255,255,255,0.2)'}
+                color={customColors.cardBorder || "rgba(255,255,255,0.2)"}
                 onChange={(e) => onColorChange("cardBorder", e.target.value)}
                 description="Border color for product cards"
               />
@@ -462,11 +610,24 @@ const CustomizationPanel = ({
                   <span className="color-swatch" style={{ backgroundColor: rgbaToHex(customColors.overlayBg) }} />
                 </label>
                 <div className="color-picker-container">
-                  <input type="color" value={rgbaToHex(customColors.overlayBg)} onChange={(e) => handleOverlayColorChange(e.target.value)} className="color-picker" />
+                  <input
+                    type="color"
+                    value={rgbaToHex(customColors.overlayBg)}
+                    onChange={(e) => handleOverlayColorChange(e.target.value)}
+                    className="color-picker"
+                  />
                   <span className="color-value">{customColors.overlayBg}</span>
                 </div>
                 <label className="opacity-label">Overlay Opacity: {Math.round(opacityValue * 100)}%</label>
-                <input type="range" min="0" max="1" step="0.01" value={opacityValue} onChange={handleOpacityChange} className="opacity-slider" />
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={opacityValue}
+                  onChange={handleOpacityChange}
+                  className="opacity-slider"
+                />
               </div>
               <ColorPickerRow
                 label="Button Background"
@@ -480,14 +641,26 @@ const CustomizationPanel = ({
           {!isOverlayDesign && !isShoppingCart && (
             <div className="section">
               <h3 className="section-title">🎨 Brand Colors</h3>
-              <ColorPickerRow label="Primary Color" color={customColors.primaryColor} onChange={(e) => onColorChange("primaryColor", e.target.value)} />
-              <ColorPickerRow label="Button Background" color={customColors.buttonBg} onChange={(e) => onColorChange("buttonBg", e.target.value)} />
-              <ColorPickerRow label="Description Color" color={customColors.descriptionColor} onChange={(e) => onColorChange("descriptionColor", e.target.value)} />
+              <ColorPickerRow
+                label="Primary Color"
+                color={customColors.primaryColor}
+                onChange={(e) => onColorChange("primaryColor", e.target.value)}
+              />
+              <ColorPickerRow
+                label="Button Background"
+                color={customColors.buttonBg}
+                onChange={(e) => onColorChange("buttonBg", e.target.value)}
+              />
+              <ColorPickerRow
+                label="Description Color"
+                color={customColors.descriptionColor}
+                onChange={(e) => onColorChange("descriptionColor", e.target.value)}
+              />
             </div>
           )}
         </div>
       )}
-        
+
       {/* TEXT CONTENT TAB */}
       {activeMainTab === "text" && (
         <div className="content-container">
@@ -498,19 +671,39 @@ const CustomizationPanel = ({
                 <h3 className="section-title">🛒 Hero & Button Text</h3>
                 <div className="form-group">
                   <label className="form-label">Hero Title</label>
-                  <input type="text" value={textContent.shoppingHeroTitle} onChange={(e) => handleTextChange("shoppingHeroTitle", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.shoppingHeroTitle}
+                    onChange={(e) => handleTextChange("shoppingHeroTitle", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Hero Subtitle</label>
-                  <input type="text" value={textContent.shoppingHeroSubtitle} onChange={(e) => handleTextChange("shoppingHeroSubtitle", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.shoppingHeroSubtitle}
+                    onChange={(e) => handleTextChange("shoppingHeroSubtitle", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Start Shopping Button</label>
-                  <input type="text" value={textContent.shoppingButtonStart} onChange={(e) => handleTextChange("shoppingButtonStart", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.shoppingButtonStart}
+                    onChange={(e) => handleTextChange("shoppingButtonStart", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Join Now Button</label>
-                  <input type="text" value={textContent.shoppingButtonJoin} onChange={(e) => handleTextChange("shoppingButtonJoin", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.shoppingButtonJoin}
+                    onChange={(e) => handleTextChange("shoppingButtonJoin", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
               </div>
 
@@ -518,27 +711,57 @@ const CustomizationPanel = ({
                 <h3 className="section-title">📊 Statistics</h3>
                 <div className="form-group">
                   <label className="form-label">Products Stat Label</label>
-                  <input type="text" value={textContent.shoppingStat1Label} onChange={(e) => handleTextChange("shoppingStat1Label", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.shoppingStat1Label}
+                    onChange={(e) => handleTextChange("shoppingStat1Label", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Products Stat Value</label>
-                  <input type="number" value={textContent.statProducts} onChange={(e) => handleStatChange("statProducts", e.target.value)} className="input-field" />
+                  <input
+                    type="number"
+                    value={textContent.statProducts}
+                    onChange={(e) => handleStatChange("statProducts", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Customers Stat Label</label>
-                  <input type="text" value={textContent.shoppingStat2Label} onChange={(e) => handleTextChange("shoppingStat2Label", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.shoppingStat2Label}
+                    onChange={(e) => handleTextChange("shoppingStat2Label", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Customers Stat Value</label>
-                  <input type="number" value={textContent.statCustomers} onChange={(e) => handleStatChange("statCustomers", e.target.value)} className="input-field" />
+                  <input
+                    type="number"
+                    value={textContent.statCustomers}
+                    onChange={(e) => handleStatChange("statCustomers", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Stores Stat Label</label>
-                  <input type="text" value={textContent.shoppingStat3Label} onChange={(e) => handleTextChange("shoppingStat3Label", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.shoppingStat3Label}
+                    onChange={(e) => handleTextChange("shoppingStat3Label", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Stores Stat Value</label>
-                  <input type="number" value={textContent.statStores} onChange={(e) => handleStatChange("statStores", e.target.value)} className="input-field" />
+                  <input
+                    type="number"
+                    value={textContent.statStores}
+                    onChange={(e) => handleStatChange("statStores", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
               </div>
 
@@ -546,22 +769,39 @@ const CustomizationPanel = ({
                 <h3 className="section-title">📑 Section Titles</h3>
                 <div className="form-group">
                   <label className="form-label">Categories Title</label>
-                  <input type="text" value={textContent.shoppingCategoriesTitle} onChange={(e) => handleTextChange("shoppingCategoriesTitle", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.shoppingCategoriesTitle}
+                    onChange={(e) => handleTextChange("shoppingCategoriesTitle", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Products Title</label>
-                  <input type="text" value={textContent.shoppingProductsTitle} onChange={(e) => handleTextChange("shoppingProductsTitle", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.shoppingProductsTitle}
+                    onChange={(e) => handleTextChange("shoppingProductsTitle", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Search Placeholder</label>
-                  <input type="text" value={textContent.shoppingSearchPlaceholder} onChange={(e) => handleTextChange("shoppingSearchPlaceholder", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.shoppingSearchPlaceholder}
+                    onChange={(e) => handleTextChange("shoppingSearchPlaceholder", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
               </div>
 
               <div className="section">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="section-title mb-0">🏷️ Categories</h3>
-                  <button onClick={handleAddCategory} className="px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">+ Add Category</button>
+                  <button onClick={handleAddCategory} className="px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">
+                    + Add Category
+                  </button>
                 </div>
                 {textContent.categories.map((cat, idx) => (
                   <div key={cat.id} className="border border-gray-200 rounded-lg p-3 mb-3">
@@ -570,9 +810,27 @@ const CustomizationPanel = ({
                       <button onClick={() => handleRemoveCategory(idx)} className="text-red-500 text-xs hover:text-red-700">Remove</button>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <input type="text" value={cat.name} onChange={(e) => handleCategoryChange(idx, "name", e.target.value)} placeholder="Name" className="input-field text-sm" />
-                      <input type="text" value={cat.icon} onChange={(e) => handleCategoryChange(idx, "icon", e.target.value)} placeholder="Icon" className="input-field text-sm" />
-                      <input type="text" value={cat.slug} onChange={(e) => handleCategoryChange(idx, "slug", e.target.value)} placeholder="Slug" className="input-field text-sm col-span-2" />
+                      <input
+                        type="text"
+                        value={cat.name}
+                        onChange={(e) => handleCategoryChange(idx, "name", e.target.value)}
+                        placeholder="Name"
+                        className="input-field text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={cat.icon}
+                        onChange={(e) => handleCategoryChange(idx, "icon", e.target.value)}
+                        placeholder="Icon"
+                        className="input-field text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={cat.slug}
+                        onChange={(e) => handleCategoryChange(idx, "slug", e.target.value)}
+                        placeholder="Slug"
+                        className="input-field text-sm col-span-2"
+                      />
                     </div>
                   </div>
                 ))}
@@ -581,7 +839,9 @@ const CustomizationPanel = ({
               <div className="section">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="section-title mb-0">📦 Products</h3>
-                  <button onClick={handleAddProduct} className="px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">+ Add Product</button>
+                  <button onClick={handleAddProduct} className="px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">
+                    + Add Product
+                  </button>
                 </div>
                 {textContent.products.map((prod, idx) => (
                   <div key={prod.id} className="border border-gray-200 rounded-lg p-3 mb-3">
@@ -590,18 +850,64 @@ const CustomizationPanel = ({
                       <button onClick={() => handleRemoveProduct(idx)} className="text-red-500 text-xs hover:text-red-700">Remove</button>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <input type="text" value={prod.name} onChange={(e) => handleProductChange(idx, "name", e.target.value)} placeholder="Name" className="input-field text-sm" />
-                      <select value={prod.category} onChange={(e) => handleProductChange(idx, "category", e.target.value)} className="input-field text-sm">
-                        {textContent.categories.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
+                      <input
+                        type="text"
+                        value={prod.name}
+                        onChange={(e) => handleProductChange(idx, "name", e.target.value)}
+                        placeholder="Name"
+                        className="input-field text-sm"
+                      />
+                      <select
+                        value={prod.category}
+                        onChange={(e) => handleProductChange(idx, "category", e.target.value)}
+                        className="input-field text-sm"
+                      >
+                        {textContent.categories.map((cat) => (
+                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
                       </select>
-                      <input type="number" step="0.01" value={prod.price} onChange={(e) => handleProductChange(idx, "price", parseFloat(e.target.value))} placeholder="Price" className="input-field text-sm" />
-                      <input type="number" step="0.01" value={prod.oldPrice} onChange={(e) => handleProductChange(idx, "oldPrice", parseFloat(e.target.value))} placeholder="Old Price" className="input-field text-sm" />
-                      <input type="text" value={prod.unit} onChange={(e) => handleProductChange(idx, "unit", e.target.value)} placeholder="Unit" className="input-field text-sm" />
-                      <input type="text" value={prod.image} onChange={(e) => handleProductChange(idx, "image", e.target.value)} placeholder="Image URL" className="input-field text-sm col-span-2" />
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={prod.price}
+                        onChange={(e) => handleProductChange(idx, "price", parseFloat(e.target.value))}
+                        placeholder="Price"
+                        className="input-field text-sm"
+                      />
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={prod.oldPrice}
+                        onChange={(e) => handleProductChange(idx, "oldPrice", parseFloat(e.target.value))}
+                        placeholder="Old Price"
+                        className="input-field text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={prod.unit}
+                        onChange={(e) => handleProductChange(idx, "unit", e.target.value)}
+                        placeholder="Unit"
+                        className="input-field text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={prod.image}
+                        onChange={(e) => handleProductChange(idx, "image", e.target.value)}
+                        placeholder="Image URL"
+                        className="input-field text-sm col-span-2"
+                      />
                       <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" checked={prod.organic} onChange={(e) => handleProductChange(idx, "organic", e.target.checked)} /> Organic
+                        <input
+                          type="checkbox"
+                          checked={prod.organic}
+                          onChange={(e) => handleProductChange(idx, "organic", e.target.checked)}
+                        /> Organic
                       </label>
-                      <select value={prod.rating} onChange={(e) => handleProductChange(idx, "rating", parseInt(e.target.value))} className="input-field text-sm">
+                      <select
+                        value={prod.rating}
+                        onChange={(e) => handleProductChange(idx, "rating", parseInt(e.target.value))}
+                        className="input-field text-sm"
+                      >
                         <option value={5}>★★★★★ (5)</option>
                         <option value={4}>★★★★☆ (4)</option>
                         <option value={3}>★★★☆☆ (3)</option>
@@ -618,36 +924,133 @@ const CustomizationPanel = ({
           {/* For Template 1 & 2 - Educational and Overlay */}
           {!isShoppingCart && (
             <>
-              {/* Navigation Menu Labels */}
+              {/* Navigation Menu Editor */}
               <div className="section">
-                <h3 className="section-title">📌 Navigation Menu Labels & Dropdown Items</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="section-title mb-0">📌 Navigation Menu</h3>
+                  <button onClick={handleAddNavItem} className="px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition">
+                    + Add Menu Item
+                  </button>
+                </div>
+
+                {textContent.navigationItems.length === 0 && (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg text-gray-500">
+                    No navigation items. Click "Add Menu Item" to create one.
+                  </div>
+                )}
+
                 {textContent.navigationItems.map((item, index) => (
-                  <div key={index} className="nav-item">
-                    <label className="nav-item-label">{item.name}</label>
-                    <input
-                      type="text"
-                      value={item.label}
-                      onChange={(e) => handleNavigationChange(index, e.target.value)}
-                      className="input-field"
-                    />
-                    {item.menuItems && item.menuItems.length > 0 && (
-                      <div className="dropdown-container">
-                        <label className="dropdown-header">▼ Dropdown Items for "{item.label}"</label>
-                        {item.menuItems.map((menuItem, menuIndex) => (
-                          <div key={menuIndex}>
-                            <label className="dropdown-label">Item {menuIndex + 1}</label>
-                            <input
-                              type="text"
-                              value={menuItem}
-                              onChange={(e) => handleDropdownItemsChange(index, menuIndex, e.target.value)}
-                              className="input-field"
-                            />
-                          </div>
-                        ))}
+                  <div key={index} className="border border-gray-200 rounded-lg p-3 mb-3 bg-white">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-xs font-bold">
+                          {index + 1}
+                        </span>
+                        <span className="font-medium text-sm text-gray-600">
+                          {item.type === "dropdown" ? "📁 Dropdown Menu" : "🔗 Link Menu"}
+                        </span>
+                      </div>
+                      <button onClick={() => handleRemoveNavItem(index)} className="text-red-500 text-xs hover:text-red-700 transition px-2 py-1 rounded hover:bg-red-50">
+                        Remove
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Menu Name (Identifier)</label>
+                        <input
+                          type="text"
+                          value={item.name}
+                          onChange={(e) => handleNavigationNameChange(index, e.target.value)}
+                          className="input-field text-sm"
+                          placeholder="e.g., About Us"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Display Label</label>
+                        <input
+                          type="text"
+                          value={item.label}
+                          onChange={(e) => handleNavigationChange(index, e.target.value)}
+                          className="input-field text-sm"
+                          placeholder="e.g., About Us"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Menu Type</label>
+                      <select
+                        value={item.type}
+                        onChange={(e) => handleNavigationTypeChange(index, e.target.value)}
+                        className="input-field text-sm"
+                      >
+                        <option value="link">🔗 Link (Single Page)</option>
+                        <option value="dropdown">📁 Dropdown (With Submenu)</option>
+                      </select>
+                    </div>
+
+                    {/* Dropdown Items */}
+                    {item.type === "dropdown" && (
+                      <div className="ml-4 mt-3 p-3 bg-gray-50 rounded-lg border-l-4 border-blue-400">
+                        <div className="flex justify-between items-center mb-3">
+                          <label className="font-medium text-sm text-gray-700">📋 Dropdown Items</label>
+                          <button onClick={() => handleAddDropdownItem(index)} className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition flex items-center gap-1">
+                            + Add Item
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          {item.menuItems && item.menuItems.map((menuItem, menuIndex) => (
+                            <div key={menuIndex} className="flex gap-2 items-center">
+                              <span className="text-gray-400 text-xs w-5">{menuIndex + 1}.</span>
+                              <input
+                                type="text"
+                                value={menuItem}
+                                onChange={(e) => handleDropdownItemsChange(index, menuIndex, e.target.value)}
+                                className="input-field text-sm flex-1"
+                                placeholder={`Dropdown item ${menuIndex + 1}`}
+                              />
+                              <button onClick={() => handleRemoveDropdownItem(index, menuIndex)} className="text-red-500 text-xs hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition" title="Remove item">
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        {(!item.menuItems || item.menuItems.length === 0) && (
+                          <div className="text-center py-3 text-gray-400 text-xs">No dropdown items. Click "Add Item" to create one.</div>
+                        )}
                       </div>
                     )}
                   </div>
                 ))}
+
+                {/* Live Preview */}
+                {textContent.navigationItems.length > 0 && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+                    <h4 className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-2">
+                      <span>👁️</span> Live Preview
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {textContent.navigationItems.map((item, idx) => (
+                        <div key={idx} className="relative group">
+                          <button className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-blue-400 transition">
+                            {item.label}
+                            {item.type === 'dropdown' && <span className="ml-1 text-xs">▼</span>}
+                          </button>
+                          {item.type === 'dropdown' && item.menuItems && item.menuItems.length > 0 && (
+                            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 min-w-[150px]">
+                              {item.menuItems.map((subItem, subIdx) => (
+                                <div key={subIdx} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50 rounded">
+                                  {subItem}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Home Section */}
@@ -655,49 +1058,66 @@ const CustomizationPanel = ({
                 <h3 className="section-title">🏠 Home Section</h3>
                 <div className="form-group">
                   <label className="form-label">Tagline / Title</label>
-                  <input type="text" value={textContent.homeTagline} onChange={(e) => handleTextChange("homeTagline", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.homeTagline}
+                    onChange={(e) => handleTextChange("homeTagline", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Description</label>
-                  <textarea value={textContent.homeDescription} onChange={(e) => handleTextChange("homeDescription", e.target.value)} className="textarea-field" rows="3" />
+                  <textarea
+                    value={textContent.homeDescription}
+                    onChange={(e) => handleTextChange("homeDescription", e.target.value)}
+                    className="textarea-field"
+                    rows="3"
+                  />
                 </div>
-                
-                {/* Image URL field - For Template 2 (Overlay Design) */}
+
                 {isOverlayDesign && (
                   <div className="form-group">
                     <label className="form-label">Hero Background Image URL</label>
-                    <input 
-                      type="text" 
-                      value={textContent.homeImage} 
-                      onChange={(e) => handleTextChange("homeImage", e.target.value)} 
-                      className="input-field" 
+                    <input
+                      type="text"
+                      value={textContent.homeImage}
+                      onChange={(e) => handleTextChange("homeImage", e.target.value)}
+                      className="input-field"
                       placeholder="https://images.unsplash.com/photo-..."
                     />
-                    <div className="color-description">Enter the URL of the hero background image (for the right side image)</div>
+                    <div className="color-description">Enter the URL of the hero background image</div>
                     {textContent.homeImage && (
                       <div className="mt-2">
-                        <img 
-                          src={textContent.homeImage} 
-                          alt="Preview" 
+                        <img
+                          src={textContent.homeImage}
+                          alt="Preview"
                           className="w-full h-32 object-cover rounded-lg mt-2 border border-gray-200"
-                          onError={(e) => {
-                            e.target.src = "https://via.placeholder.com/400x200?text=Invalid+Image+URL";
-                          }}
+                          onError={(e) => { e.target.src = "https://via.placeholder.com/400x200?text=Invalid+Image+URL"; }}
                         />
                       </div>
                     )}
                   </div>
                 )}
-                
+
                 {!isOverlayDesign && (
                   <div className="form-group">
                     <label className="form-label">Subtitle</label>
-                    <input type="text" value={textContent.homeSubtitle} onChange={(e) => handleTextChange("homeSubtitle", e.target.value)} className="input-field" />
+                    <input
+                      type="text"
+                      value={textContent.homeSubtitle}
+                      onChange={(e) => handleTextChange("homeSubtitle", e.target.value)}
+                      className="input-field"
+                    />
                   </div>
                 )}
                 <div className="form-group">
                   <label className="form-label">Primary CTA Button</label>
-                  <input type="text" value={textContent.homePrimaryCta} onChange={(e) => handleTextChange("homePrimaryCta", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.homePrimaryCta}
+                    onChange={(e) => handleTextChange("homePrimaryCta", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
               </div>
 
@@ -706,23 +1126,48 @@ const CustomizationPanel = ({
                 <h3 className="section-title">📖 About Section</h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
-                  <input type="text" value={textContent.aboutTitle} onChange={(e) => handleTextChange("aboutTitle", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.aboutTitle}
+                    onChange={(e) => handleTextChange("aboutTitle", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Our Vision</label>
-                  <textarea value={textContent.aboutVision} onChange={(e) => handleTextChange("aboutVision", e.target.value)} className="textarea-field" rows="2" />
+                  <textarea
+                    value={textContent.aboutVision}
+                    onChange={(e) => handleTextChange("aboutVision", e.target.value)}
+                    className="textarea-field"
+                    rows="2"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Leadership</label>
-                  <textarea value={textContent.aboutLeadership} onChange={(e) => handleTextChange("aboutLeadership", e.target.value)} className="textarea-field" rows="2" />
+                  <textarea
+                    value={textContent.aboutLeadership}
+                    onChange={(e) => handleTextChange("aboutLeadership", e.target.value)}
+                    className="textarea-field"
+                    rows="2"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">History</label>
-                  <textarea value={textContent.aboutHistory} onChange={(e) => handleTextChange("aboutHistory", e.target.value)} className="textarea-field" rows="2" />
+                  <textarea
+                    value={textContent.aboutHistory}
+                    onChange={(e) => handleTextChange("aboutHistory", e.target.value)}
+                    className="textarea-field"
+                    rows="2"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Campus Life</label>
-                  <textarea value={textContent.aboutCampusLife} onChange={(e) => handleTextChange("aboutCampusLife", e.target.value)} className="textarea-field" rows="2" />
+                  <textarea
+                    value={textContent.aboutCampusLife}
+                    onChange={(e) => handleTextChange("aboutCampusLife", e.target.value)}
+                    className="textarea-field"
+                    rows="2"
+                  />
                 </div>
               </div>
 
@@ -731,23 +1176,48 @@ const CustomizationPanel = ({
                 <h3 className="section-title">🎓 Courses Section</h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
-                  <input type="text" value={textContent.coursesTitle} onChange={(e) => handleTextChange("coursesTitle", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.coursesTitle}
+                    onChange={(e) => handleTextChange("coursesTitle", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Engineering</label>
-                  <textarea value={textContent.coursesEngineering} onChange={(e) => handleTextChange("coursesEngineering", e.target.value)} className="textarea-field" rows="2" />
+                  <textarea
+                    value={textContent.coursesEngineering}
+                    onChange={(e) => handleTextChange("coursesEngineering", e.target.value)}
+                    className="textarea-field"
+                    rows="2"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Management</label>
-                  <textarea value={textContent.coursesManagement} onChange={(e) => handleTextChange("coursesManagement", e.target.value)} className="textarea-field" rows="2" />
+                  <textarea
+                    value={textContent.coursesManagement}
+                    onChange={(e) => handleTextChange("coursesManagement", e.target.value)}
+                    className="textarea-field"
+                    rows="2"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Data Science</label>
-                  <textarea value={textContent.coursesDataScience} onChange={(e) => handleTextChange("coursesDataScience", e.target.value)} className="textarea-field" rows="2" />
+                  <textarea
+                    value={textContent.coursesDataScience}
+                    onChange={(e) => handleTextChange("coursesDataScience", e.target.value)}
+                    className="textarea-field"
+                    rows="2"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Design</label>
-                  <textarea value={textContent.coursesDesign} onChange={(e) => handleTextChange("coursesDesign", e.target.value)} className="textarea-field" rows="2" />
+                  <textarea
+                    value={textContent.coursesDesign}
+                    onChange={(e) => handleTextChange("coursesDesign", e.target.value)}
+                    className="textarea-field"
+                    rows="2"
+                  />
                 </div>
               </div>
 
@@ -756,12 +1226,22 @@ const CustomizationPanel = ({
                 <h3 className="section-title">🏆 Achievements Section</h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
-                  <input type="text" value={textContent.achievementsTitle} onChange={(e) => handleTextChange("achievementsTitle", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.achievementsTitle}
+                    onChange={(e) => handleTextChange("achievementsTitle", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 {textContent.achievementsList.map((achievement, index) => (
                   <div key={index} className="achievement-item">
                     <label className="achievement-label">Achievement {index + 1}</label>
-                    <input type="text" value={achievement} onChange={(e) => handleAchievementChange(index, e.target.value)} className="input-field" />
+                    <input
+                      type="text"
+                      value={achievement}
+                      onChange={(e) => handleAchievementChange(index, e.target.value)}
+                      className="input-field"
+                    />
                   </div>
                 ))}
               </div>
@@ -771,19 +1251,39 @@ const CustomizationPanel = ({
                 <h3 className="section-title">📞 Contact Section</h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
-                  <input type="text" value={textContent.contactTitle} onChange={(e) => handleTextChange("contactTitle", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.contactTitle}
+                    onChange={(e) => handleTextChange("contactTitle", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Address</label>
-                  <input type="text" value={textContent.contactAddress} onChange={(e) => handleTextChange("contactAddress", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.contactAddress}
+                    onChange={(e) => handleTextChange("contactAddress", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Phone</label>
-                  <input type="text" value={textContent.contactPhone} onChange={(e) => handleTextChange("contactPhone", e.target.value)} className="input-field" />
+                  <input
+                    type="text"
+                    value={textContent.contactPhone}
+                    onChange={(e) => handleTextChange("contactPhone", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Email</label>
-                  <input type="email" value={textContent.contactEmail} onChange={(e) => handleTextChange("contactEmail", e.target.value)} className="input-field" />
+                  <input
+                    type="email"
+                    value={textContent.contactEmail}
+                    onChange={(e) => handleTextChange("contactEmail", e.target.value)}
+                    className="input-field"
+                  />
                 </div>
               </div>
             </>

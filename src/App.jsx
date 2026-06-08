@@ -1,32 +1,83 @@
-// App.js
-import { Routes, Route } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import SiteViewer from "./pages/SiteViewer";
-import Preview from "./pages/preview/PreviewParent";
-import CustomizedParent from "./pages/customized/CustomizedParent";
-function Team() {
-  return <h1>Team Management</h1>;
-}
+// src/App.jsx
+import { useEffect, useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { loadUserFromStorage } from './redux/slices/authSlice';
+import { useCrossTabSync } from './hooks/useCrossTabSync';
+import ProtectedRoute from './ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
 
-function Analytics() {
-  return <h1>Performance Analytics</h1>;
-}
+// Import your pages
+import Login from './pages/login/LoginPage';
+import Dashboard from './pages/Dashboard';
+import CustomizedParent from './pages/customized/CustomizedParent';
+import PreviewTemplate from './pages/preview/PreviewParent';
 
-function Settings() {
-  return <h1>Account Settings</h1>;
-}
+function App() {
+  const dispatch = useDispatch();
+  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  
+  // Enable cross-tab synchronization
+  useCrossTabSync();
 
-export default function App() {
+  useEffect(() => {
+    // Load user from localStorage when app starts
+    const loadUser = async () => {
+      await dispatch(loadUserFromStorage());
+      setInitialLoadComplete(true);
+    };
+    loadUser();
+  }, [dispatch]);
+
+  // Show loading spinner while checking authentication
+  if (!initialLoadComplete || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/team" element={<Team />} />
-      <Route path="/analytics" element={<Analytics />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/siteViewer" element={<SiteViewer />} />
-      {/* Remove :templateId - just use /preview */}
-      <Route path="/preview" element={<Preview />} />
-      <Route path="/customize" element={<CustomizedParent />} />
+      {/* Public Routes - accessible only when not logged in */}
+      <Route path="/login" element={
+        <PublicRoute>
+          <Login />
+        </PublicRoute>
+      } />
+      
+      {/* Protected Routes - accessible only when logged in */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/customize" element={
+        <ProtectedRoute>
+          <CustomizedParent />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/preview" element={
+        <ProtectedRoute>
+          <PreviewTemplate />
+        </ProtectedRoute>
+      } />
+      
+      {/* Redirect root based on authentication status */}
+      <Route path="/" element={
+        isAuthenticated ? 
+          <Navigate to="/dashboard" replace /> : 
+          <Navigate to="/login" replace />
+      } />
     </Routes>
   );
 }
+
+export default App;

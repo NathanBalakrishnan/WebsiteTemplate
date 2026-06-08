@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from 'react-redux';
 import siteData from '../../data/multisiteData.json';
 import Navbar from '../../components/Navbar';
 import Home from '../preview/Home';
@@ -12,13 +13,23 @@ import ShoppingCheckout from '../preview/shopping-cart/ShoppingCheckout';
 import ProductDetail from '../preview/shopping-cart/ProductDetail';
 import CategoryPage from '../preview/shopping-cart/CategoryPage';
 import CustomizationPanel from './CustomizationPanel';
+import { 
+  saveUserCustomizedTemplate, 
+  loadUserCustomizedTemplate,
+  exportUserCustomizations,
+  getUserTemplate,
+  resetUserTemplate
+} from '../../utils/userTemplateStorage';
 import "../../assets/css/PreviewTemplate.css";
 
 export default function CustomizedParent() {
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURN
   const [activeTab, setActiveTab] = useState('Home');
   const [theme, setTheme] = useState('classic');
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
   const [customColors, setCustomColors] = useState({
     primaryColor: '',
     accentColor: '',
@@ -36,7 +47,6 @@ export default function CustomizedParent() {
   });
 
   const [textOverrides, setTextOverrides] = useState({
-    // Template 1 & 2 content
     homeTagline: '',
     homeDescription: '',
     homeSubtitle: '',
@@ -59,7 +69,6 @@ export default function CustomizedParent() {
     contactPhone: '',
     contactEmail: '',
     navigationItems: [],
-    // Template 3 shopping cart content
     shoppingHeroTitle: '',
     shoppingHeroSubtitle: '',
     shoppingButtonStart: '',
@@ -80,29 +89,115 @@ export default function CustomizedParent() {
   const location = useLocation();
   const navigate = useNavigate();
   const previewRef = useRef(null);
+  const saveTimeoutRef = useRef(null);
+  const { user } = useSelector((state) => state.auth);
+  const userId = user?.id;
 
   const selectedTemplateId = location.state?.templateId;
-  const selectedTemplate = siteData.find(
+  
+  // Find original template from siteData (without user-specific data)
+  const originalTemplate = siteData.find(
     (template) => template.templateId === selectedTemplateId
   );
 
-  useEffect(() => {
-    if (selectedTemplate?.themes?.[0]) {
-      setTheme(selectedTemplate.themes[0].id);
-    }
-  }, [selectedTemplate]);
+  const [loadedTemplate, setLoadedTemplate] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Cart functionality
+  // Load user's customized template or create user-specific version
   useEffect(() => {
-    const saved = localStorage.getItem(`cart_${selectedTemplateId}`);
+    const loadTemplate = async () => {
+      if (originalTemplate && userId) {
+        // Try to load existing customization
+        const userTemplate = loadUserCustomizedTemplate(userId, selectedTemplateId, originalTemplate);
+        
+        // If no customization exists, create a user-specific copy
+        if (!userTemplate.isCustomized && userTemplate.id !== userId) {
+          const userSpecificTemplate = {
+            ...originalTemplate,
+            id: userId,
+            templateId: selectedTemplateId,
+            isCustomized: false,
+            createdAt: new Date().toISOString()
+          };
+          setLoadedTemplate(userSpecificTemplate);
+        } else {
+          setLoadedTemplate(userTemplate);
+        }
+      } else if (originalTemplate) {
+        setLoadedTemplate(originalTemplate);
+      }
+    };
+    
+    loadTemplate();
+  }, [originalTemplate, userId, selectedTemplateId]);
+
+  // Initialize theme from loaded template
+  useEffect(() => {
+    if (loadedTemplate?.themes?.[0]) {
+      setTheme(loadedTemplate.themes[0].id);
+    }
+  }, [loadedTemplate]);
+
+  // Load cart from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem(`cart_${selectedTemplateId}_${userId || 'guest'}`);
     if (saved) setCart(JSON.parse(saved));
-  }, [selectedTemplateId]);
+  }, [selectedTemplateId, userId]);
 
+  // Save cart to localStorage
   useEffect(() => {
-    if (selectedTemplate?.themeScope === 'shopping-cart') {
-      localStorage.setItem(`cart_${selectedTemplateId}`, JSON.stringify(cart));
+    if (loadedTemplate?.themeScope === 'shopping-cart') {
+      localStorage.setItem(`cart_${selectedTemplateId}_${userId || 'guest'}`, JSON.stringify(cart));
     }
-  }, [cart, selectedTemplateId, selectedTemplate]);
+  }, [cart, selectedTemplateId, userId, loadedTemplate]);
+
+  // Auto-save customization with debounce
+  useEffect(() => {
+    if (!loadedTemplate || !userId || !hasUnsavedChanges) return;
+    
+    // Clear previous timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Set saving indicator
+    setIsSaving(true);
+    
+    // Debounce save to avoid too many writes
+    saveTimeoutRef.current = setTimeout(() => {
+      const customizedTemplate = buildCustomizedTemplate();
+      if (customizedTemplate) {
+        const success = saveUserCustomizedTemplate(userId, selectedTemplateId, customizedTemplate);
+        if (success) {
+          setLastSaved(new Date());
+          setHasUnsavedChanges(false);
+          console.log('✅ Auto-saved customization for user', userId, 'template', selectedTemplateId);
+        }
+      }
+      setIsSaving(false);
+    }, 1500);
+    
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [
+    theme, 
+    customColors, 
+    textOverrides, 
+    userId, 
+    selectedTemplateId, 
+    loadedTemplate,
+    hasUnsavedChanges
+  ]);
+
+  // Mark that changes have been made
+  const markAsChanged = () => {
+    if (!hasUnsavedChanges) {
+      setHasUnsavedChanges(true);
+    }
+  };
 
   const addToCart = (product) => {
     const existing = cart.find(item => item.id === product.id);
@@ -113,10 +208,12 @@ export default function CustomizedParent() {
     } else {
       setCart([...cart, { ...product, qty: 1 }]);
     }
+    markAsChanged();
   };
 
   const removeFromCart = (id) => {
     setCart(cart.filter(item => item.id !== id));
+    markAsChanged();
   };
 
   const updateQty = (id, qty) => {
@@ -125,30 +222,25 @@ export default function CustomizedParent() {
     } else {
       setCart(cart.map(item => item.id === id ? { ...item, qty } : item));
     }
+    markAsChanged();
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    markAsChanged();
+  };
+  
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
-  if (!selectedTemplate) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
-        <div className="text-center p-8">
-          <h1 className="text-2xl mb-4">No template selected</h1>
-        </div>
-      </div>
-    );
-  }
-
-  const themeScope = selectedTemplate.themeScope || "full-page";
-  const currentThemeData = selectedTemplate.themes?.find(t => t.id === theme);
+  const themeScope = loadedTemplate?.themeScope || "full-page";
+  const currentThemeData = loadedTemplate?.themes?.find(t => t.id === theme);
 
   const defaultColors = {
     overlayBg: currentThemeData?.overlayBg || "rgba(0,0,0,0.5)",
     accentColor: currentThemeData?.accentColor || (theme === 'teal' ? '#14b8a6' : theme === 'purple' ? '#8b5cf6' : '#f97316'),
-    headerBg: currentThemeData?.headerBg || (selectedTemplate.styles?.navbar?.background || "#16275B"),
-    footerBg: currentThemeData?.footerBg || (selectedTemplate.styles?.navbar?.background || "#16275B"),
+    headerBg: currentThemeData?.headerBg || (loadedTemplate?.styles?.navbar?.background || "#16275B"),
+    footerBg: currentThemeData?.footerBg || (loadedTemplate?.styles?.navbar?.background || "#16275B"),
     logoColor: currentThemeData?.logoColor || "#FFFFFF",
     menuColor: currentThemeData?.menuColor || "#FFFFFF",
     menuHoverColor: currentThemeData?.menuHoverColor || "#38BDF8",
@@ -162,9 +254,11 @@ export default function CustomizedParent() {
   };
 
   useEffect(() => {
-    setCustomColors(defaultColors);
-    applyColorVariables(defaultColors);
-  }, [theme, selectedTemplate]);
+    if (loadedTemplate) {
+      setCustomColors(defaultColors);
+      applyColorVariables(defaultColors);
+    }
+  }, [theme, loadedTemplate]);
 
   const applyColorVariables = (colors) => {
     document.documentElement.style.setProperty('--accent-color', colors.accentColor || '#14b8a6');
@@ -194,50 +288,54 @@ export default function CustomizedParent() {
       }
       return newColors;
     });
+    markAsChanged();
   };
 
   const handleReset = () => {
-    setCustomColors(defaultColors);
-    setTextOverrides({
-      homeTagline: '',
-      homeDescription: '',
-      homeSubtitle: '',
-      homePrimaryCta: '',
-      homeImage: '',
-      aboutTitle: '',
-      aboutVision: '',
-      aboutLeadership: '',
-      aboutHistory: '',
-      aboutCampusLife: '',
-      coursesTitle: '',
-      coursesEngineering: '',
-      coursesManagement: '',
-      coursesDataScience: '',
-      coursesDesign: '',
-      achievementsTitle: '',
-      achievementsList: [],
-      contactTitle: '',
-      contactAddress: '',
-      contactPhone: '',
-      contactEmail: '',
-      navigationItems: [],
-      shoppingHeroTitle: '',
-      shoppingHeroSubtitle: '',
-      shoppingButtonStart: '',
-      shoppingButtonJoin: '',
-      shoppingCategoriesTitle: '',
-      shoppingProductsTitle: '',
-      shoppingSearchPlaceholder: '',
-      shoppingStat1Label: '',
-      shoppingStat2Label: '',
-      shoppingStat3Label: '',
-      statProducts: 0,
-      statCustomers: 0,
-      statStores: 0,
-      categories: [],
-      products: [],
-    });
-    applyColorVariables(defaultColors);
+    if (window.confirm('Are you sure you want to reset all customization? This will revert to the original template.')) {
+      setCustomColors(defaultColors);
+      setTextOverrides({
+        homeTagline: '',
+        homeDescription: '',
+        homeSubtitle: '',
+        homePrimaryCta: '',
+        homeImage: '',
+        aboutTitle: '',
+        aboutVision: '',
+        aboutLeadership: '',
+        aboutHistory: '',
+        aboutCampusLife: '',
+        coursesTitle: '',
+        coursesEngineering: '',
+        coursesManagement: '',
+        coursesDataScience: '',
+        coursesDesign: '',
+        achievementsTitle: '',
+        achievementsList: [],
+        contactTitle: '',
+        contactAddress: '',
+        contactPhone: '',
+        contactEmail: '',
+        navigationItems: [],
+        shoppingHeroTitle: '',
+        shoppingHeroSubtitle: '',
+        shoppingButtonStart: '',
+        shoppingButtonJoin: '',
+        shoppingCategoriesTitle: '',
+        shoppingProductsTitle: '',
+        shoppingSearchPlaceholder: '',
+        shoppingStat1Label: '',
+        shoppingStat2Label: '',
+        shoppingStat3Label: '',
+        statProducts: 0,
+        statCustomers: 0,
+        statStores: 0,
+        categories: [],
+        products: [],
+      });
+      applyColorVariables(defaultColors);
+      setHasUnsavedChanges(true);
+    }
   };
 
   const handleTextChangeFromPanel = (field, value) => {
@@ -245,6 +343,7 @@ export default function CustomizedParent() {
       ...prev,
       [field]: value
     }));
+    markAsChanged();
   };
 
   const overlayBg = customColors.overlayBg || defaultColors.overlayBg;
@@ -261,13 +360,14 @@ export default function CustomizedParent() {
   const cardBorder = customColors.cardBorder || defaultColors.cardBorder;
   const buttonBg = customColors.buttonBg || defaultColors.buttonBg;
 
-useEffect(() => {
-  document.documentElement.style.setProperty('--accent-color', accentColor);
-  document.documentElement.style.setProperty('--button-bg', buttonBg);
-  document.documentElement.style.setProperty('--text-color', textColor);
-  document.documentElement.style.setProperty('--card-bg', cardBg);
-  document.documentElement.style.setProperty('--card-border', cardBorder);
-}, [accentColor, buttonBg, textColor, cardBg, cardBorder]);
+  useEffect(() => {
+    document.documentElement.style.setProperty('--accent-color', accentColor);
+    document.documentElement.style.setProperty('--button-bg', buttonBg);
+    document.documentElement.style.setProperty('--text-color', textColor);
+    document.documentElement.style.setProperty('--card-bg', cardBg);
+    document.documentElement.style.setProperty('--card-border', cardBorder);
+  }, [accentColor, buttonBg, textColor, cardBg, cardBorder]);
+
   useEffect(() => {
     if (themeScope === "full-page" || themeScope === "shopping-cart") {
       document.documentElement.setAttribute('data-theme', theme);
@@ -277,89 +377,274 @@ useEffect(() => {
   const isOverlayDesign = themeScope === "full-page";
   const isShoppingCart = themeScope === "shopping-cart";
 
-  // Prepare shopping content data with overrides
-  const shoppingContentData = {
-    ...selectedTemplate.shoppingContent,
-    heroTitle: textOverrides.shoppingHeroTitle || selectedTemplate.shoppingContent?.heroTitle || "Organic Foods at your Doorsteps",
-    heroSubtitle: textOverrides.shoppingHeroSubtitle || selectedTemplate.shoppingContent?.heroSubtitle || "Fresh, healthy, and delicious groceries delivered to your home",
-    buttonStart: textOverrides.shoppingButtonStart || selectedTemplate.shoppingContent?.buttonStart || "START SHOPPING",
-    buttonJoin: textOverrides.shoppingButtonJoin || selectedTemplate.shoppingContent?.buttonJoin || "JOIN NOW",
-    categoriesTitle: textOverrides.shoppingCategoriesTitle || selectedTemplate.shoppingContent?.categoriesTitle || "Shop by Category",
-    productsTitle: textOverrides.shoppingProductsTitle || selectedTemplate.shoppingContent?.productsTitle || "Featured Products",
-    searchPlaceholder: textOverrides.shoppingSearchPlaceholder || selectedTemplate.shoppingContent?.searchPlaceholder || "Search products...",
-    stat1Label: textOverrides.shoppingStat1Label || selectedTemplate.shoppingContent?.stat1Label || "PRODUCTS",
-    stat2Label: textOverrides.shoppingStat2Label || selectedTemplate.shoppingContent?.stat2Label || "HAPPY CUSTOMERS",
-    stat3Label: textOverrides.shoppingStat3Label || selectedTemplate.shoppingContent?.stat3Label || "STORES",
+  const buildCustomizedTemplate = () => {
+    if (!loadedTemplate) return null;
+    
+    const customizedTemplate = {
+      ...loadedTemplate,
+      id: userId || loadedTemplate.id,
+      templateId: selectedTemplateId,
+      isCustomized: true,
+      lastModified: new Date().toISOString(),
+      themes: loadedTemplate.themes.map(t => ({
+        ...t,
+        accentColor: t.id === theme ? accentColor : t.accentColor,
+        buttonBg: t.id === theme ? buttonBg : t.buttonBg,
+        textColor: t.id === theme ? textColor : t.textColor,
+        cardBg: t.id === theme ? cardBg : t.cardBg,
+        cardBorder: t.id === theme ? cardBorder : t.cardBorder,
+        headerBg: t.id === theme ? headerBg : t.headerBg,
+        footerBg: t.id === theme ? footerBg : t.footerBg,
+        logoColor: t.id === theme ? logoColor : t.logoColor,
+        menuColor: t.id === theme ? menuColor : t.menuColor,
+        menuHoverColor: t.id === theme ? menuHoverColor : t.menuHoverColor,
+      })),
+      home: {
+        ...loadedTemplate.home,
+        tagline: textOverrides.homeTagline || loadedTemplate.home?.tagline,
+        description: textOverrides.homeDescription || loadedTemplate.home?.description,
+        subtitle: textOverrides.homeSubtitle || loadedTemplate.home?.subtitle,
+        primaryCta: textOverrides.homePrimaryCta || loadedTemplate.home?.primaryCta,
+        image: textOverrides.homeImage || loadedTemplate.home?.image,
+      },
+      about: {
+        ...loadedTemplate.about,
+        title: textOverrides.aboutTitle || loadedTemplate.about?.title,
+        sections: {
+          'Our Vision': textOverrides.aboutVision || loadedTemplate.about?.sections?.['Our Vision'],
+          'Leadership': textOverrides.aboutLeadership || loadedTemplate.about?.sections?.['Leadership'],
+          'History': textOverrides.aboutHistory || loadedTemplate.about?.sections?.['History'],
+          'Campus Life': textOverrides.aboutCampusLife || loadedTemplate.about?.sections?.['Campus Life'],
+        }
+      },
+      courses: {
+        ...loadedTemplate.courses,
+        title: textOverrides.coursesTitle || loadedTemplate.courses?.title,
+        details: {
+          'Engineering': textOverrides.coursesEngineering || loadedTemplate.courses?.details?.['Engineering'],
+          'Management': textOverrides.coursesManagement || loadedTemplate.courses?.details?.['Management'],
+          'Data Science': textOverrides.coursesDataScience || loadedTemplate.courses?.details?.['Data Science'],
+          'Design': textOverrides.coursesDesign || loadedTemplate.courses?.details?.['Design'],
+        }
+      },
+      achievements: {
+        ...loadedTemplate.achievements,
+        title: textOverrides.achievementsTitle || loadedTemplate.achievements?.title,
+        list: textOverrides.achievementsList.length ? textOverrides.achievementsList : loadedTemplate.achievements?.list,
+      },
+      contact: {
+        ...loadedTemplate.contact,
+        title: textOverrides.contactTitle || loadedTemplate.contact?.title,
+        address: textOverrides.contactAddress || loadedTemplate.contact?.address,
+        phone: textOverrides.contactPhone || loadedTemplate.contact?.phone,
+        email: textOverrides.contactEmail || loadedTemplate.contact?.email,
+      },
+      navigation: textOverrides.navigationItems.length ? textOverrides.navigationItems : loadedTemplate.navigation,
+    };
+
+    if (isShoppingCart) {
+      customizedTemplate.shoppingContent = {
+        ...loadedTemplate.shoppingContent,
+        heroTitle: textOverrides.shoppingHeroTitle || loadedTemplate.shoppingContent?.heroTitle,
+        heroSubtitle: textOverrides.shoppingHeroSubtitle || loadedTemplate.shoppingContent?.heroSubtitle,
+        buttonStart: textOverrides.shoppingButtonStart || loadedTemplate.shoppingContent?.buttonStart,
+        buttonJoin: textOverrides.shoppingButtonJoin || loadedTemplate.shoppingContent?.buttonJoin,
+        categoriesTitle: textOverrides.shoppingCategoriesTitle || loadedTemplate.shoppingContent?.categoriesTitle,
+        productsTitle: textOverrides.shoppingProductsTitle || loadedTemplate.shoppingContent?.productsTitle,
+        searchPlaceholder: textOverrides.shoppingSearchPlaceholder || loadedTemplate.shoppingContent?.searchPlaceholder,
+        stat1Label: textOverrides.shoppingStat1Label || loadedTemplate.shoppingContent?.stat1Label,
+        stat2Label: textOverrides.shoppingStat2Label || loadedTemplate.shoppingContent?.stat2Label,
+        stat3Label: textOverrides.shoppingStat3Label || loadedTemplate.shoppingContent?.stat3Label,
+      };
+      customizedTemplate.stats = {
+        products: textOverrides.statProducts !== 0 ? textOverrides.statProducts : loadedTemplate.stats?.products,
+        customers: textOverrides.statCustomers !== 0 ? textOverrides.statCustomers : loadedTemplate.stats?.customers,
+        stores: textOverrides.statStores !== 0 ? textOverrides.statStores : loadedTemplate.stats?.stores,
+      };
+      customizedTemplate.categories = textOverrides.categories.length ? textOverrides.categories : loadedTemplate.categories;
+      customizedTemplate.products = textOverrides.products.length ? textOverrides.products : loadedTemplate.products;
+    }
+
+    return customizedTemplate;
   };
 
-  const statsData = {
-    products: textOverrides.statProducts !== 0 ? textOverrides.statProducts : (selectedTemplate.stats?.products || 9000),
-    customers: textOverrides.statCustomers !== 0 ? textOverrides.statCustomers : (selectedTemplate.stats?.customers || 50000),
-    stores: textOverrides.statStores !== 0 ? textOverrides.statStores : (selectedTemplate.stats?.stores || 25),
+  const handleGenerateJSON = () => {
+    const customizedTemplate = buildCustomizedTemplate();
+    if (!customizedTemplate) return;
+    
+    if (userId) {
+      saveUserCustomizedTemplate(userId, selectedTemplateId, customizedTemplate);
+      setHasUnsavedChanges(false);
+      alert(`✅ Template customized and saved for ${user?.name}!`);
+    }
+    
+    // const jsonString = JSON.stringify(customizedTemplate, null, 2);
+    // const blob = new Blob([jsonString], { type: 'application/json' });
+    // const url = URL.createObjectURL(blob);
+    // const link = document.createElement('a');
+    // link.href = url;
+    // link.download = `user_${userId || 'guest'}_template_${selectedTemplateId}_customized.json`;
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
+    // URL.revokeObjectURL(url);
   };
 
-  const categoriesData = textOverrides.categories?.length ? textOverrides.categories : selectedTemplate.categories;
-  const productsData = textOverrides.products?.length ? textOverrides.products : selectedTemplate.products;
+  const handleExportAllUserCustomizations = () => {
+    if (userId) {
+      exportUserCustomizations(userId);
+      // const blob = new Blob([exportData], { type: 'application/json' });
+      // const url = URL.createObjectURL(blob);
+      // const link = document.createElement('a');
+      // link.href = url;
+      // link.download = `user_${userId}_all_customizations_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+      // document.body.appendChild(link);
+      // link.click();
+      // document.body.removeChild(link);
+      // URL.revokeObjectURL(url);
+      
+      alert(`✅ Exported all customizations for user ${user?.name}`);
+    }
+  };
 
-  const mergedShoppingTemplate = {
-    ...selectedTemplate,
+  const handleResetToOriginal = async () => {
+    if (window.confirm('⚠️ Are you sure you want to reset to the original template? All your customizations will be lost permanently.')) {
+      if (userId && originalTemplate) {
+        const success = resetUserTemplate(userId, selectedTemplateId, originalTemplate);
+        if (success) {
+          // Reload the template
+          const resetTemplate = loadUserCustomizedTemplate(userId, selectedTemplateId, originalTemplate);
+          setLoadedTemplate(resetTemplate);
+          setTextOverrides({
+            homeTagline: '',
+            homeDescription: '',
+            homeSubtitle: '',
+            homePrimaryCta: '',
+            homeImage: '',
+            aboutTitle: '',
+            aboutVision: '',
+            aboutLeadership: '',
+            aboutHistory: '',
+            aboutCampusLife: '',
+            coursesTitle: '',
+            coursesEngineering: '',
+            coursesManagement: '',
+            coursesDataScience: '',
+            coursesDesign: '',
+            achievementsTitle: '',
+            achievementsList: [],
+            contactTitle: '',
+            contactAddress: '',
+            contactPhone: '',
+            contactEmail: '',
+            navigationItems: [],
+            shoppingHeroTitle: '',
+            shoppingHeroSubtitle: '',
+            shoppingButtonStart: '',
+            shoppingButtonJoin: '',
+            shoppingCategoriesTitle: '',
+            shoppingProductsTitle: '',
+            shoppingSearchPlaceholder: '',
+            shoppingStat1Label: '',
+            shoppingStat2Label: '',
+            shoppingStat3Label: '',
+            statProducts: 0,
+            statCustomers: 0,
+            statStores: 0,
+            categories: [],
+            products: [],
+          });
+          setHasUnsavedChanges(false);
+          alert('✅ Template reset to original successfully!');
+        }
+      }
+    }
+  };
+
+  // Prepare data with overrides (only if loadedTemplate exists)
+  const shoppingContentData = loadedTemplate ? {
+    ...loadedTemplate.shoppingContent,
+    heroTitle: textOverrides.shoppingHeroTitle || loadedTemplate.shoppingContent?.heroTitle || "Organic Foods at your Doorsteps",
+    heroSubtitle: textOverrides.shoppingHeroSubtitle || loadedTemplate.shoppingContent?.heroSubtitle || "Fresh, healthy, and delicious groceries delivered to your home",
+    buttonStart: textOverrides.shoppingButtonStart || loadedTemplate.shoppingContent?.buttonStart || "START SHOPPING",
+    buttonJoin: textOverrides.shoppingButtonJoin || loadedTemplate.shoppingContent?.buttonJoin || "JOIN NOW",
+    categoriesTitle: textOverrides.shoppingCategoriesTitle || loadedTemplate.shoppingContent?.categoriesTitle || "Shop by Category",
+    productsTitle: textOverrides.shoppingProductsTitle || loadedTemplate.shoppingContent?.productsTitle || "Featured Products",
+    searchPlaceholder: textOverrides.shoppingSearchPlaceholder || loadedTemplate.shoppingContent?.searchPlaceholder || "Search products...",
+    stat1Label: textOverrides.shoppingStat1Label || loadedTemplate.shoppingContent?.stat1Label || "PRODUCTS",
+    stat2Label: textOverrides.shoppingStat2Label || loadedTemplate.shoppingContent?.stat2Label || "HAPPY CUSTOMERS",
+    stat3Label: textOverrides.shoppingStat3Label || loadedTemplate.shoppingContent?.stat3Label || "STORES",
+  } : {};
+
+  const statsData = loadedTemplate ? {
+    products: textOverrides.statProducts !== 0 ? textOverrides.statProducts : (loadedTemplate.stats?.products || 9000),
+    customers: textOverrides.statCustomers !== 0 ? textOverrides.statCustomers : (loadedTemplate.stats?.customers || 50000),
+    stores: textOverrides.statStores !== 0 ? textOverrides.statStores : (loadedTemplate.stats?.stores || 25),
+  } : {};
+
+  const categoriesData = textOverrides.categories?.length ? textOverrides.categories : loadedTemplate?.categories || [];
+  const productsData = textOverrides.products?.length ? textOverrides.products : loadedTemplate?.products || [];
+
+  const mergedShoppingTemplate = loadedTemplate ? {
+    ...loadedTemplate,
     shoppingContent: shoppingContentData,
     stats: statsData,
     categories: categoriesData,
     products: productsData,
-  };
+  } : null;
 
-  // Prepare data with text overrides for educational/overlay templates
-  const homeData = {
-    ...selectedTemplate.home,
-    tagline: textOverrides.homeTagline || selectedTemplate.home?.tagline,
-    description: textOverrides.homeDescription || selectedTemplate.home?.description,
-    subtitle: textOverrides.homeSubtitle || selectedTemplate.home?.subtitle,
-    primaryCta: textOverrides.homePrimaryCta || selectedTemplate.home?.primaryCta || selectedTemplate.home?.cta,
+  const homeData = loadedTemplate ? {
+    ...loadedTemplate.home,
+    tagline: textOverrides.homeTagline || loadedTemplate.home?.tagline,
+    description: textOverrides.homeDescription || loadedTemplate.home?.description,
+    subtitle: textOverrides.homeSubtitle || loadedTemplate.home?.subtitle,
+    primaryCta: textOverrides.homePrimaryCta || loadedTemplate.home?.primaryCta || loadedTemplate.home?.cta,
     image: textOverrides.homeImage !== undefined && textOverrides.homeImage !== null
       ? (textOverrides.homeImage.trim() === "" ? "" : textOverrides.homeImage)
-      : selectedTemplate.home?.image,
-  };
+      : loadedTemplate.home?.image,
+  } : null;
 
-  const aboutData = {
-    ...selectedTemplate.about,
-    title: textOverrides.aboutTitle || selectedTemplate.about?.title,
+  const aboutData = loadedTemplate ? {
+    ...loadedTemplate.about,
+    title: textOverrides.aboutTitle || loadedTemplate.about?.title,
     sections: {
-      'Our Vision': textOverrides.aboutVision || selectedTemplate.about?.sections?.['Our Vision'],
-      'Leadership': textOverrides.aboutLeadership || selectedTemplate.about?.sections?.['Leadership'],
-      'History': textOverrides.aboutHistory || selectedTemplate.about?.sections?.['History'],
-      'Campus Life': textOverrides.aboutCampusLife || selectedTemplate.about?.sections?.['Campus Life'],
+      'Our Vision': textOverrides.aboutVision || loadedTemplate.about?.sections?.['Our Vision'],
+      'Leadership': textOverrides.aboutLeadership || loadedTemplate.about?.sections?.['Leadership'],
+      'History': textOverrides.aboutHistory || loadedTemplate.about?.sections?.['History'],
+      'Campus Life': textOverrides.aboutCampusLife || loadedTemplate.about?.sections?.['Campus Life'],
     }
-  };
+  } : null;
 
-  const coursesData = {
-    ...selectedTemplate.courses,
-    title: textOverrides.coursesTitle || selectedTemplate.courses?.title,
+  const coursesData = loadedTemplate ? {
+    ...loadedTemplate.courses,
+    title: textOverrides.coursesTitle || loadedTemplate.courses?.title,
     details: {
-      'Engineering': textOverrides.coursesEngineering || selectedTemplate.courses?.details?.['Engineering'],
-      'Management': textOverrides.coursesManagement || selectedTemplate.courses?.details?.['Management'],
-      'Data Science': textOverrides.coursesDataScience || selectedTemplate.courses?.details?.['Data Science'],
-      'Design': textOverrides.coursesDesign || selectedTemplate.courses?.details?.['Design'],
+      'Engineering': textOverrides.coursesEngineering || loadedTemplate.courses?.details?.['Engineering'],
+      'Management': textOverrides.coursesManagement || loadedTemplate.courses?.details?.['Management'],
+      'Data Science': textOverrides.coursesDataScience || loadedTemplate.courses?.details?.['Data Science'],
+      'Design': textOverrides.coursesDesign || loadedTemplate.courses?.details?.['Design'],
     }
-  };
+  } : null;
 
-  const achievementsData = {
-    ...selectedTemplate.achievements,
-    title: textOverrides.achievementsTitle || selectedTemplate.achievements?.title,
-    list: textOverrides.achievementsList.length ? textOverrides.achievementsList : selectedTemplate.achievements?.list,
-  };
+  const achievementsData = loadedTemplate ? {
+    ...loadedTemplate.achievements,
+    title: textOverrides.achievementsTitle || loadedTemplate.achievements?.title,
+    list: textOverrides.achievementsList.length ? textOverrides.achievementsList : loadedTemplate.achievements?.list,
+  } : null;
 
-  const contactData = {
-    ...selectedTemplate.contact,
-    title: textOverrides.contactTitle || selectedTemplate.contact?.title,
-    address: textOverrides.contactAddress || selectedTemplate.contact?.address,
-    phone: textOverrides.contactPhone || selectedTemplate.contact?.phone,
-    email: textOverrides.contactEmail || selectedTemplate.contact?.email,
-  };
+  const contactData = loadedTemplate ? {
+    ...loadedTemplate.contact,
+    title: textOverrides.contactTitle || loadedTemplate.contact?.title,
+    address: textOverrides.contactAddress || loadedTemplate.contact?.address,
+    phone: textOverrides.contactPhone || loadedTemplate.contact?.phone,
+    email: textOverrides.contactEmail || loadedTemplate.contact?.email,
+  } : null;
 
-  const navigationData = textOverrides.navigationItems.length ? textOverrides.navigationItems : selectedTemplate.navigation;
+  const navigationData = textOverrides.navigationItems.length ? textOverrides.navigationItems : loadedTemplate?.navigation || [];
 
   const renderContent = () => {
+    if (!loadedTemplate) return null;
+    
     if (isShoppingCart) {
       switch(activeTab) {
         case 'Home':
@@ -416,7 +701,7 @@ useEffect(() => {
           return (
             <Home 
               data={homeData}
-              styles={selectedTemplate.styles?.home}
+              styles={loadedTemplate.styles?.home}
               isOverlayDesign={true}
               accentColor={accentColor}
               primaryColor={primaryColor}
@@ -429,7 +714,7 @@ useEffect(() => {
           return (
             <About 
               data={aboutData}
-              styles={selectedTemplate.styles?.about}
+              styles={loadedTemplate.styles?.about}
               isOverlayDesign={true}
               accentColor={accentColor}
               primaryColor={primaryColor}
@@ -442,7 +727,7 @@ useEffect(() => {
           return (
             <Courses 
               data={coursesData}
-              styles={selectedTemplate.styles?.courses}
+              styles={loadedTemplate.styles?.courses}
               isOverlayDesign={true}
               accentColor={accentColor}
               primaryColor={primaryColor}
@@ -455,7 +740,7 @@ useEffect(() => {
           return (
             <Achievements 
               data={achievementsData}
-              styles={selectedTemplate.styles?.achievements}
+              styles={loadedTemplate.styles?.achievements}
               isOverlayDesign={true}
               accentColor={accentColor}
               primaryColor={primaryColor}
@@ -468,7 +753,7 @@ useEffect(() => {
           return (
             <Contact 
               data={contactData}
-              styles={selectedTemplate.styles?.contact}
+              styles={loadedTemplate.styles?.contact}
               isOverlayDesign={true}
               accentColor={accentColor}
               primaryColor={primaryColor}
@@ -481,7 +766,7 @@ useEffect(() => {
           return (
             <Home 
               data={homeData}
-              styles={selectedTemplate.styles?.home}
+              styles={loadedTemplate.styles?.home}
               isOverlayDesign={true}
               accentColor={accentColor}
               primaryColor={primaryColor}
@@ -499,7 +784,7 @@ useEffect(() => {
         return (
           <Home 
             data={homeData}
-            styles={selectedTemplate.styles?.home}
+            styles={loadedTemplate.styles?.home}
             isOverlayDesign={false}
             primaryColor={primaryColor}
             descriptionColor={descriptionColor}
@@ -511,7 +796,7 @@ useEffect(() => {
         return (
           <About 
             data={aboutData}
-            styles={selectedTemplate.styles?.about}
+            styles={loadedTemplate.styles?.about}
             isOverlayDesign={false}
             primaryColor={primaryColor}
             textColor={textColor}
@@ -523,7 +808,7 @@ useEffect(() => {
         return (
           <Courses 
             data={coursesData}
-            styles={selectedTemplate.styles?.courses}
+            styles={loadedTemplate.styles?.courses}
             isOverlayDesign={false}
             primaryColor={primaryColor}
             textColor={textColor}
@@ -535,7 +820,7 @@ useEffect(() => {
         return (
           <Achievements 
             data={achievementsData}
-            styles={selectedTemplate.styles?.achievements}
+            styles={loadedTemplate.styles?.achievements}
             isOverlayDesign={false}
             primaryColor={primaryColor}
             textColor={textColor}
@@ -547,7 +832,7 @@ useEffect(() => {
         return (
           <Contact 
             data={contactData}
-            styles={selectedTemplate.styles?.contact}
+            styles={loadedTemplate.styles?.contact}
             isOverlayDesign={false}
             primaryColor={primaryColor}
             textColor={textColor}
@@ -559,7 +844,7 @@ useEffect(() => {
         return (
           <Home 
             data={homeData}
-            styles={selectedTemplate.styles?.home}
+            styles={loadedTemplate.styles?.home}
             isOverlayDesign={false}
             primaryColor={primaryColor}
             descriptionColor={descriptionColor}
@@ -569,6 +854,18 @@ useEffect(() => {
         );
     }
   };
+
+  // Loading state - shown when template is not yet loaded
+  if (!loadedTemplate) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
+        <div className="text-center p-8">
+          <h1 className="text-2xl mb-4">Loading template...</h1>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -599,8 +896,15 @@ useEffect(() => {
         }}
         onColorChange={handleColorChange}
         onReset={handleReset}
-        templateData={selectedTemplate}
+        templateData={loadedTemplate}
         onTextChange={handleTextChangeFromPanel}
+        onExportJSON={handleGenerateJSON}
+        user={user}
+        onExportAll={handleExportAllUserCustomizations}
+        onResetToOriginal={handleResetToOriginal}
+        isSaving={isSaving}
+        hasUnsavedChanges={hasUnsavedChanges}
+        lastSaved={lastSaved}
       />
 
       <div
@@ -635,7 +939,7 @@ useEffect(() => {
           <>
             <div style={{
               position: 'absolute', inset: 0,
-              backgroundImage: `url(${homeData.image || selectedTemplate.home?.image})`,
+              backgroundImage: `url(${homeData?.image || loadedTemplate.home?.image})`,
               backgroundSize: 'cover', backgroundPosition: 'center',
               zIndex: 0, pointerEvents: 'none',
             }} />
@@ -655,9 +959,9 @@ useEffect(() => {
         }}>
           <Navbar
             navData={navigationData}
-            themesData={selectedTemplate.themes || []}
+            themesData={loadedTemplate.themes || []}
             activeTab={activeTab}
-            templateData={selectedTemplate}
+            templateData={loadedTemplate}
             setActiveTab={setActiveTab}
             currentTheme={theme}
             setTheme={setTheme}
@@ -706,7 +1010,7 @@ useEffect(() => {
               <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs tracking-wide ${
                 (isOverlayDesign || isShoppingCart) ? 'text-white/40' : 'text-white/70'
               }`}>
-                © {new Date().getFullYear()} {selectedTemplate.title}. All rights reserved.
+                © {new Date().getFullYear()} {loadedTemplate.title}. All rights reserved.
               </div>
             </footer>
           </div>
