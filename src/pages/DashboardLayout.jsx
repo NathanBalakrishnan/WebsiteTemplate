@@ -4,8 +4,15 @@ import "../assets/css/AuthPopup.css";
 import Welcome from "./HomePage";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { logout } from "../redux/slices/authSlice";
-import { FiLogOut, FiUser, FiGrid, FiHome, FiSettings } from "react-icons/fi";
+import { logoutUser } from "../redux/slices/authSlice";
+import { 
+  FiLogOut, 
+  FiUser, 
+  FiGrid, 
+  FiHome, 
+  FiSettings,
+  FiPackage,
+} from "react-icons/fi";
 import { useState } from "react";
 
 export default function DashboardLayout({ onProtectedAction, isAuthenticated, user: propUser }) {
@@ -18,11 +25,11 @@ export default function DashboardLayout({ onProtectedAction, isAuthenticated, us
   const user = propUser || reduxUser;
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+    console.log('Logout clicked');
+    dispatch(logoutUser());
+    navigate('/login', { replace: true });
   };
 
-  // Don't redirect if we're already on login page
   const menuItems = [
     { path: '/dashboard', icon: <FiHome />, label: 'Dashboard' },
     { path: '/dashboard', icon: <FiGrid />, label: 'Templates' },
@@ -35,7 +42,9 @@ export default function DashboardLayout({ onProtectedAction, isAuthenticated, us
       <header className="header">
         <div className="header-left">
           <div className="logo">
-            <span className="logo-icon">🎨</span>
+            <span className="logo-icon">
+              <FiPackage size={28} color="#8b5cf6" />
+            </span>
             <h2>TemplateStudio</h2>
           </div>
         </div>

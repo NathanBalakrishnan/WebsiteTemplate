@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import ProductCard from "../../components/common/ProductCard";
 import { FiShoppingBag, FiUsers, FiMapPin } from "react-icons/fi";
-
+import DynamicIcon from "../../components/common/DynamicIcon";
 export default function Home({
   data,
   styles,
@@ -22,8 +22,9 @@ export default function Home({
     const products = data?.products || [];
     const categories = data?.categories || [];
     const stats = data?.stats || { products: 0, customers: 0, stores: 0 };
+    const icons = data?.icons
     const shoppingContent = data?.shoppingContent || {};
-
+    console.log("stats",icons.productIcon)
     const filteredProducts = products.filter((product) => {
       if (!product) return false;
       const matchesSearch = product.name
@@ -63,24 +64,32 @@ export default function Home({
         {/* Stats Section - Text color applied */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl">
-            <FiShoppingBag
+            {/* <FiShoppingBag
               className="text-3xl mx-auto mb-3"
               style={{ color: "var(--accent-color)" }}
+            /> */}
+            <DynamicIcon
+              name={icons?.productIcon}// Pass the icon name as a string
+              size={28}
+              className="mx-auto mb-3"
+              style={{ color: accentColor }}
             />
             <div
               className="text-3xl font-bold"
               style={{ color: "var(--text-color)" }}
             >
-              {stats.products?.toLocaleString() || 0}+
+              {stats.products?.toLocaleString() || 0}+ 
             </div>
             <div className="text-white/60 text-sm">
               {shoppingContent.stat1Label || "PRODUCTS"}
             </div>
           </div>
           <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl">
-            <FiUsers
-              className="text-3xl mx-auto mb-3"
-              style={{ color: "var(--accent-color)" }}
+             <DynamicIcon
+              name={icons?.customerIcon}// Pass the icon name as a string
+              size={28}
+              className="mx-auto mb-3"
+              style={{ color: accentColor }}
             />
             <div
               className="text-3xl font-bold"
@@ -93,9 +102,11 @@ export default function Home({
             </div>
           </div>
           <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl">
-            <FiMapPin
-              className="text-3xl mx-auto mb-3"
-              style={{ color: "var(--accent-color)" }}
+             <DynamicIcon
+              name={icons?.storeIcon}// Pass the icon name as a string
+              size={28}
+              className="mx-auto mb-3"
+              style={{ color: accentColor }}
             />
             <div
               className="text-3xl font-bold"

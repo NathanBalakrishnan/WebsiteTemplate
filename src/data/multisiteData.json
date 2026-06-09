@@ -379,6 +379,11 @@
         "rating": 4
       }
     ],
+    "icons": {
+        "productIcon": "FiShoppingBag",
+        "customerIcon": "FiUsers",
+        "storeIcon": "FiMapPin"
+      },
     "stats": {
       "products": 9000,
       "customers": 50000,
