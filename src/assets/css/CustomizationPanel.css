@@ -176,6 +176,17 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
+.color-picker::-webkit-color-swatch-wrapper {
+padding: 0;
+}
+
+.color-picker::-webkit-color-swatch {
+border: none;
+border-radius: 50%;
+}
+.color-picker::-moz-color-swatch {
+border: none;border-radius: 50%;
+}
 .color-picker:hover {
   transform: scale(1.05);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
@@ -494,12 +505,67 @@
 /* Button Group */
 .button-group {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
+  justify-content: center; 
+  align-items: center;
   margin-bottom: 15px;
-  justify-content: flex-end;
 }
 
+.reset-original-button,
+.export-all-button,
+.reset-button,
+.export-button {
+  position: relative;
+  overflow: hidden;
+  min-width: 180px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+
+  transition: all 0.3s ease;
+}
+/* shine animation */
+.reset-original-button::before,
+.export-all-button::before,
+.reset-button::before,
+.export-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+
+  transform: skewX(-25deg);
+}
+/* shine animation : hover */
+.reset-original-button:hover::before,
+.export-all-button:hover::before,
+.reset-button:hover::before,
+.export-button:hover::before {
+  animation: shine 0.8s ease;
+}
+@keyframes shine {
+  100% {
+    left: 150%;
+  }
+}
 .reset-original-button {
   background-color: #dc2626;
   color: white;
