@@ -3,14 +3,14 @@ import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "./DashboardLayout";
-import AuthPopup from "../components/AuthPopup";
+// import AuthPopup from "../components/AuthPopup";
 
 export default function Dashboard() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-  const [showAuthPopup, setShowAuthPopup] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null);
-  const [pendingTemplate, setPendingTemplate] = useState(null);
+  // const [showAuthPopup, setShowAuthPopup] = useState(false);
+  // const [pendingAction, setPendingAction] = useState(null);
+  // const [pendingTemplate, setPendingTemplate] = useState(null);
 
   useEffect(() => {
     // Check if there's a pending action after login redirect
@@ -55,36 +55,36 @@ export default function Dashboard() {
     }
   };
 
-  const handlePopupConfirm = () => {
-    console.log('Popup confirmed - redirecting to login');
-    setShowAuthPopup(false);
+  // const handlePopupConfirm = () => {
+  //   console.log('Popup confirmed - redirecting to login');
+  //   setShowAuthPopup(false);
     
-    // Save the intended action to localStorage before redirecting
-    if (pendingAction && pendingTemplate) {
-      localStorage.setItem('pendingAction', pendingAction);
-      localStorage.setItem('pendingTemplateId', pendingTemplate.templateId.toString());
-      console.log('Saved pending action:', pendingAction, pendingTemplate.templateId);
-    }
+  //   // Save the intended action to localStorage before redirecting
+  //   if (pendingAction && pendingTemplate) {
+  //     localStorage.setItem('pendingAction', pendingAction);
+  //     localStorage.setItem('pendingTemplateId', pendingTemplate.templateId.toString());
+  //     console.log('Saved pending action:', pendingAction, pendingTemplate.templateId);
+  //   }
     
-    // Navigate to login page
-    navigate('/login');
-  };
+  //   // Navigate to login page
+  //   navigate('/login');
+  // };
 
-  const handlePopupClose = () => {
-    console.log('Popup closed');
-    setShowAuthPopup(false);
-    setPendingAction(null);
-    setPendingTemplate(null);
-  };
+  // const handlePopupClose = () => {
+  //   console.log('Popup closed');
+  //   setShowAuthPopup(false);
+  //   setPendingAction(null);
+  //   setPendingTemplate(null);
+  // };
 
   return (
     <>
-      <AuthPopup
+      {/* <AuthPopup
         isOpen={showAuthPopup}
         onClose={handlePopupClose}
         onConfirm={handlePopupConfirm}
         message="You need to login first to customize templates. Please login to continue."
-      />
+      /> */}
       <DashboardLayout 
         onProtectedAction={handleProtectedAction}
         isAuthenticated={isAuthenticated}

@@ -86,72 +86,114 @@ const CustomizationPanel = ({
     products: [],
   });
 
+  // Helper to get original text values from templateData
+  const getOriginalTextContent = () => {
+    if (!templateData) return textContent;
+    if (isShoppingCart) {
+      return {
+        shoppingHeroTitle:
+          templateData.shoppingContent?.heroTitle ||
+          "Organic Foods at your Doorsteps",
+        shoppingHeroSubtitle:
+          templateData.shoppingContent?.heroSubtitle ||
+          "Fresh, healthy, and delicious groceries delivered to your home",
+        shoppingButtonStart:
+          templateData.shoppingContent?.buttonStart || "START SHOPPING",
+        shoppingButtonJoin:
+          templateData.shoppingContent?.buttonJoin || "JOIN NOW",
+        shoppingStat1Label:
+          templateData.shoppingContent?.stat1Label || "PRODUCTS",
+        shoppingStat2Label:
+          templateData.shoppingContent?.stat2Label || "HAPPY CUSTOMERS",
+        shoppingStat3Label:
+          templateData.shoppingContent?.stat3Label || "STORES",
+        shoppingCategoriesTitle:
+          templateData.shoppingContent?.categoriesTitle || "Shop by Category",
+        shoppingProductsTitle:
+          templateData.shoppingContent?.productsTitle || "Featured Products",
+        shoppingSearchPlaceholder:
+          templateData.shoppingContent?.searchPlaceholder ||
+          "Search products...",
+        statProducts: templateData.stats?.products || 9000,
+        statCustomers: templateData.stats?.customers || 50000,
+        statStores: templateData.stats?.stores || 25,
+        categories: templateData.categories || [],
+        products: templateData.products || [],
+        // Keep non-shopping fields empty to avoid overwriting
+        homeTagline: "",
+        homeDescription: "",
+        homeSubtitle: "",
+        homePrimaryCta: "",
+        homeImage: "",
+        aboutTitle: "",
+        aboutVision: "",
+        aboutLeadership: "",
+        aboutHistory: "",
+        aboutCampusLife: "",
+        coursesTitle: "",
+        coursesEngineering: "",
+        coursesManagement: "",
+        coursesDataScience: "",
+        coursesDesign: "",
+        achievementsTitle: "",
+        achievementsList: [],
+        contactTitle: "",
+        contactAddress: "",
+        contactPhone: "",
+        contactEmail: "",
+        navigationItems: [],
+      };
+    } else {
+      return {
+        homeTagline: templateData.home?.tagline || "",
+        homeDescription: templateData.home?.description || "",
+        homeSubtitle: templateData.home?.subtitle || "",
+        homePrimaryCta:
+          templateData.home?.primaryCta || templateData.home?.cta || "",
+        homeImage: templateData.home?.image || "",
+        aboutTitle: templateData.about?.title || "",
+        aboutVision: templateData.about?.sections?.["Our Vision"] || "",
+        aboutLeadership: templateData.about?.sections?.["Leadership"] || "",
+        aboutHistory: templateData.about?.sections?.["History"] || "",
+        aboutCampusLife: templateData.about?.sections?.["Campus Life"] || "",
+        coursesTitle: templateData.courses?.title || "",
+        coursesEngineering:
+          templateData.courses?.details?.["Engineering"] || "",
+        coursesManagement: templateData.courses?.details?.["Management"] || "",
+        coursesDataScience:
+          templateData.courses?.details?.["Data Science"] || "",
+        coursesDesign: templateData.courses?.details?.["Design"] || "",
+        achievementsTitle: templateData.achievements?.title || "",
+        achievementsList: templateData.achievements?.list || [],
+        contactTitle: templateData.contact?.title || "",
+        contactAddress: templateData.contact?.address || "",
+        contactPhone: templateData.contact?.phone || "",
+        contactEmail: templateData.contact?.email || "",
+        navigationItems: templateData.navigation || [],
+        // Non-applicable shopping fields
+        shoppingHeroTitle: "",
+        shoppingHeroSubtitle: "",
+        shoppingButtonStart: "",
+        shoppingButtonJoin: "",
+        shoppingStat1Label: "",
+        shoppingStat2Label: "",
+        shoppingStat3Label: "",
+        shoppingCategoriesTitle: "",
+        shoppingProductsTitle: "",
+        shoppingSearchPlaceholder: "",
+        statProducts: 0,
+        statCustomers: 0,
+        statStores: 0,
+        categories: [],
+        products: [],
+      };
+    }
+  };
+
   // Load data based on template type
   useEffect(() => {
     if (templateData) {
-      if (isShoppingCart) {
-        setTextContent((prev) => ({
-          ...prev,
-          shoppingHeroTitle:
-            templateData.shoppingContent?.heroTitle ||
-            "Organic Foods at your Doorsteps",
-          shoppingHeroSubtitle:
-            templateData.shoppingContent?.heroSubtitle ||
-            "Fresh, healthy, and delicious groceries delivered to your home",
-          shoppingButtonStart:
-            templateData.shoppingContent?.buttonStart || "START SHOPPING",
-          shoppingButtonJoin:
-            templateData.shoppingContent?.buttonJoin || "JOIN NOW",
-          shoppingStat1Label:
-            templateData.shoppingContent?.stat1Label || "PRODUCTS",
-          shoppingStat2Label:
-            templateData.shoppingContent?.stat2Label || "HAPPY CUSTOMERS",
-          shoppingStat3Label:
-            templateData.shoppingContent?.stat3Label || "STORES",
-          shoppingCategoriesTitle:
-            templateData.shoppingContent?.categoriesTitle || "Shop by Category",
-          shoppingProductsTitle:
-            templateData.shoppingContent?.productsTitle || "Featured Products",
-          shoppingSearchPlaceholder:
-            templateData.shoppingContent?.searchPlaceholder ||
-            "Search products...",
-          statProducts: templateData.stats?.products || 9000,
-          statCustomers: templateData.stats?.customers || 50000,
-          statStores: templateData.stats?.stores || 25,
-          categories: templateData.categories || [],
-          products: templateData.products || [],
-        }));
-      } else {
-        setTextContent((prev) => ({
-          ...prev,
-          homeTagline: templateData.home?.tagline || "",
-          homeDescription: templateData.home?.description || "",
-          homeSubtitle: templateData.home?.subtitle || "",
-          homePrimaryCta:
-            templateData.home?.primaryCta || templateData.home?.cta || "",
-          homeImage: templateData.home?.image || "",
-          aboutTitle: templateData.about?.title || "",
-          aboutVision: templateData.about?.sections?.["Our Vision"] || "",
-          aboutLeadership: templateData.about?.sections?.["Leadership"] || "",
-          aboutHistory: templateData.about?.sections?.["History"] || "",
-          aboutCampusLife: templateData.about?.sections?.["Campus Life"] || "",
-          coursesTitle: templateData.courses?.title || "",
-          coursesEngineering:
-            templateData.courses?.details?.["Engineering"] || "",
-          coursesManagement:
-            templateData.courses?.details?.["Management"] || "",
-          coursesDataScience:
-            templateData.courses?.details?.["Data Science"] || "",
-          coursesDesign: templateData.courses?.details?.["Design"] || "",
-          achievementsTitle: templateData.achievements?.title || "",
-          achievementsList: templateData.achievements?.list || [],
-          contactTitle: templateData.contact?.title || "",
-          contactAddress: templateData.contact?.address || "",
-          contactPhone: templateData.contact?.phone || "",
-          contactEmail: templateData.contact?.email || "",
-          navigationItems: templateData.navigation || [],
-        }));
-      }
+      setTextContent(getOriginalTextContent());
     }
   }, [templateData, isShoppingCart]);
 
@@ -171,6 +213,27 @@ const CustomizationPanel = ({
     setTextContent((prev) => ({ ...prev, [field]: value }));
     if (onTextChange) {
       onTextChange(field, value);
+    }
+  };
+
+  // FULL RESET: resets colors and all text content to original template
+  const handleFullReset = () => {
+    if (
+      window.confirm(
+        "Reset all customization (colors & text) to original template?",
+      )
+    ) {
+      // Reset colors via parent prop
+      onReset();
+      // Reset local text content to original template data
+      const originalText = getOriginalTextContent();
+      setTextContent(originalText);
+      // Notify parent about every text field reset
+      if (onTextChange) {
+        Object.keys(originalText).forEach((key) => {
+          onTextChange(key, originalText[key]);
+        });
+      }
     }
   };
 
@@ -496,25 +559,34 @@ const CustomizationPanel = ({
 
         {/* Action Buttons */}
         <div className="button-group">
-          <button onClick={onReset} className="reset-button">
+          <button onClick={handleFullReset} className="reset-button">
             🔄 Reset Current Tab
           </button>
-          {onResetToOriginal && (
-            <button
-              onClick={onResetToOriginal}
-              className="reset-original-button"
-            >
-              🔄 Reset to Original Template
+          <div
+            style={{
+              display: "flex",
+              gap: "8px",
+              alignItems: "center",
+              flexWrap: "nowrap",
+            }}
+          >
+            {onResetToOriginal && (
+              <button
+                onClick={onResetToOriginal}
+                className="reset-original-button"
+              >
+                🔄 Reset to Original Template
+              </button>
+            )}
+            <button onClick={onExportJSON} className="export-button">
+              📥 Export This Template
             </button>
-          )}
-          <button onClick={onExportJSON} className="export-button">
-            📥 Export This Template
-          </button>
-          {user && onExportAll && (
-            <button onClick={onExportAll} className="export-all-button">
-              📦 Export All My Templates
-            </button>
-          )}
+            {user && onExportAll && (
+              <button onClick={onExportAll} className="export-all-button">
+                📦 Export All My Templates
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="main-tabs">

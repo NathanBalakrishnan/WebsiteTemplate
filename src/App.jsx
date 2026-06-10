@@ -18,8 +18,8 @@ function App() {
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   
-  // Enable cross-tab synchronization
-  useCrossTabSync();
+  // Enable cross-tab synchronization b/w multiple Browser tab
+  // useCrossTabSync();
 
   useEffect(() => {
     // Load user from localStorage when app starts
