@@ -466,13 +466,8 @@ const CustomizationPanel = ({
       <div className="panel-header">
         <h1
           className="panel-title"
-          style={{ display: "flex", alignItems: "center", gap: "10px" }}
+          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize:"40px" }}
         >
-          <DynamicIcon
-            name="IoMdColorFill"
-            size={28}
-            style={{ color: "var(--accent-color)" }}
-          />
           <span>Customize Your Template</span>
         </h1>
 
@@ -497,22 +492,60 @@ const CustomizationPanel = ({
         {/* Action Buttons */}
         <div className="button-group">
           <button onClick={onReset} className="reset-button">
-            🔄 Reset Current Tab
+
+              <DynamicIcon
+              name="FaArrowsRotate"
+              size={17}
+              style={{
+                color: "white",
+                marginRight: "5px",
+              }}
+            />
+
+            Reset Current Tab
           </button>
           {onResetToOriginal && (
             <button
               onClick={onResetToOriginal}
               className="reset-original-button"
             >
-              🔄 Reset to Original Template
+              <DynamicIcon
+              name="FaArrowsRotate"
+              size={17}
+              style={{
+                color: "white",
+                marginRight: "5px",
+              }}
+            />
+                
+              
+              Reset to Original Template
             </button>
           )}
           <button onClick={onExportJSON} className="export-button">
-            📥 Export This Template
+
+            <DynamicIcon
+              name="IoIosSave"
+              size={19}
+              style={{
+                color: "white",
+                marginRight: "5px",
+              }}
+            />
+            Save 
           </button>
           {user && onExportAll && (
             <button onClick={onExportAll} className="export-all-button">
-              📦 Export All My Templates
+              <DynamicIcon
+                name="IoIosSave"
+                size={19}
+                style={{
+                  color: "white",
+                  marginRight: "5px",
+                }}
+              />
+
+              Save All 
             </button>
           )}
         </div>
@@ -521,14 +554,37 @@ const CustomizationPanel = ({
           <button
             onClick={() => setActiveMainTab("colors")}
             className={`main-tab ${activeMainTab === "colors" ? "main-tab-active" : "main-tab-inactive"}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+            }}
           >
-            🎨 Colors
+            <DynamicIcon
+              name="IoIosColorPalette"
+              size={20}
+              style={{ color: "currentColor" }}
+            />
+            Colors
+
           </button>
           <button
             onClick={() => setActiveMainTab("text")}
             className={`main-tab ${activeMainTab === "text" ? "main-tab-active" : "main-tab-inactive"}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+            }}
           >
-            ✏️ Text Content
+            <DynamicIcon
+              name="FiEye"
+              size={19}
+              style={{ color: "currentColor" }}
+            />
+            Text Content
           </button>
         </div>
       </div>
@@ -668,7 +724,12 @@ const CustomizationPanel = ({
           {/* For Overlay Design Template (Template 2) */}
           {isOverlayDesign && !isShoppingCart && (
             <div className="section">
-              <h3 className="section-title">🎨 Theme Colors</h3>
+              <h3 className="section-title">
+                <DynamicIcon
+                  name="IoIosColorPalette"
+                  size={25}
+                  style={{ color: "#252424" }}
+                /> Theme Colors</h3>
               <ColorPickerRow
                 label="Accent Color"
                 color={customColors.accentColor}
@@ -717,7 +778,12 @@ const CustomizationPanel = ({
           {/* For Educational Template (Template 1) */}
           {!isOverlayDesign && !isShoppingCart && (
             <div className="section">
-              <h3 className="section-title">🎨 Brand Colors</h3>
+              <h3 className="section-title">
+                <DynamicIcon
+                  name="IoIosColorPalette"
+                  size={25}
+                  style={{ color: "#252424" }}
+                /> Brand Colors</h3>
               <ColorPickerRow
                 label="Primary Color"
                 color={customColors.primaryColor}
@@ -1105,7 +1171,12 @@ const CustomizationPanel = ({
               {/* Navigation Menu Editor */}
               <div className="section">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="section-title mb-0">📌 Navigation Menu</h3>
+                  <h3 className="section-title mb-0">
+                    <DynamicIcon
+                      name="FiMapPin"
+                      size={18}
+                      style={{ color: "#000000" }}
+                    /> Navigation Menu</h3>
                   <button
                     onClick={handleAddNavItem}
                     className="px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition"
@@ -1197,8 +1268,13 @@ const CustomizationPanel = ({
                     {item.type === "dropdown" && (
                       <div className="ml-4 mt-3 p-3 bg-gray-50 rounded-lg border-l-4 border-blue-400">
                         <div className="flex justify-between items-center mb-3">
-                          <label className="font-medium text-sm text-gray-700">
-                            📋 Dropdown Items
+                          <label className="flex items-center gap-2 font-medium text-sm text-gray-700">
+                            <DynamicIcon
+                              name="SlNotebook"
+                              size={15}
+                              style={{ color: "#000000" }}
+                            />
+                            <span>Dropdown Items</span>
                           </label>
                           <button
                             onClick={() => handleAddDropdownItem(index)}
@@ -1256,7 +1332,14 @@ const CustomizationPanel = ({
                 {textContent.navigationItems.length > 0 && (
                   <div className="mt-4 p-4 bg-gray-50 rounded-xl">
                     <h4 className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-2">
-                      <span>👁️</span> Live Preview
+                      <span>
+
+                        <DynamicIcon
+                          name="FiEye"
+                          size={18}
+                          style={{ color: "#000000" }}
+                        />
+                      </span> Live Preview
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {textContent.navigationItems.map((item, idx) => (
@@ -1290,7 +1373,16 @@ const CustomizationPanel = ({
 
               {/* Home Section */}
               <div className="section">
-                <h3 className="section-title">🏠 Home Section</h3>
+                <h3 className="section-title">
+
+                  <DynamicIcon
+                    name="FiHome"
+                    size={20}
+                    style={{ color: "#000000" }}
+                  />
+
+
+                  Home Section</h3>
                 <div className="form-group">
                   <label className="form-label">Tagline / Title</label>
                   <input
@@ -1375,7 +1467,15 @@ const CustomizationPanel = ({
 
               {/* About Section */}
               <div className="section">
-                <h3 className="section-title">📖 About Section</h3>
+                <h3 className="section-title">
+
+                  <DynamicIcon
+                    name="FaBookOpen"
+                    size={20}
+                    style={{ color: "#000000" }}
+                  />
+
+                  About Section</h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
                   <input
@@ -1435,7 +1535,15 @@ const CustomizationPanel = ({
 
               {/* Courses Section */}
               <div className="section">
-                <h3 className="section-title">🎓 Courses Section</h3>
+                <h3 className="section-title">
+
+                  <DynamicIcon
+                    name="FaGraduationCap"
+                    size={23}
+                    style={{ color: "#000000" }}
+                  />
+
+                  Courses Section</h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
                   <input
@@ -1495,7 +1603,12 @@ const CustomizationPanel = ({
 
               {/* Achievements Section */}
               <div className="section">
-                <h3 className="section-title">🏆 Achievements Section</h3>
+                <h3 className="section-title">
+                  <DynamicIcon
+                    name="IoIosTrophy"
+                    size={23}
+                    style={{ color: "#000000" }}
+                  /> Achievements Section</h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
                   <input
@@ -1526,7 +1639,13 @@ const CustomizationPanel = ({
 
               {/* Contact Section */}
               <div className="section">
-                <h3 className="section-title">📞 Contact Section</h3>
+                <h3 className="section-title">
+                  <DynamicIcon
+                    name="FiPhone"
+                    size={23}
+                    style={{ color: "#000000" }}
+
+                  /> Contact Section</h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
                   <input

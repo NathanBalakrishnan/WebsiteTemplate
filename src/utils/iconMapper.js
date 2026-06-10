@@ -1,5 +1,5 @@
 // src/utils/iconMapper.js
-import { 
+import {
   FiShoppingBag,
   FiUsers,
   FiMapPin,
@@ -45,7 +45,11 @@ import {
 } from "react-icons/fi";
 
 // Import from react-icons/io
-import { IoMdColorFill } from "react-icons/io";
+import { IoMdColorFill, IoIosColorPalette, IoIosSave, IoIosTrophy } from "react-icons/io";
+import { FaArrowsRotate, FaGraduationCap } from "react-icons/fa6";
+import { FaBookOpen, FaFolder  } from "react-icons/fa";
+import { SlNotebook } from "react-icons/sl";
+
 
 // Icon mapping object
 const iconMap = {
@@ -53,14 +57,14 @@ const iconMap = {
   "FiShoppingBag": FiShoppingBag,
   "FiUsers": FiUsers,
   "FiMapPin": FiMapPin,
-  
+
   // Navigation Icons
   "FiGrid": FiGrid,
   "FiHome": FiHome,
   "FiSettings": FiSettings,
   "FiLogOut": FiLogOut,
   "FiUser": FiUser,
-  
+
   // Action Icons
   "FiStar": FiStar,
   "FiHeart": FiHeart,
@@ -76,19 +80,20 @@ const iconMap = {
   "FiCheck": FiCheck,
   "FiX": FiX,
   "FiSearch": FiSearch,
-  
+
   // Arrow Icons
   "FiArrowRight": FiArrowRight,
   "FiArrowLeft": FiArrowLeft,
   "FiChevronDown": FiChevronDown,
   "FiChevronUp": FiChevronUp,
-  
+  "FaArrowsRotate": FaArrowsRotate,
+
   // Form Icons
   "FiMail": FiMail,
   "FiLock": FiLock,
   "FiEye": FiEye,
   "FiEyeOff": FiEyeOff,
-  
+
   // Design Icons
   "FiPackage": FiPackage,
   "FiBox": FiBox,
@@ -96,7 +101,7 @@ const iconMap = {
   "FiLayout": FiLayout,
   "FiBook": FiBook,
   "FiAward": FiAward,
-  
+
   // Media & Location
   "FiCalendar": FiCalendar,
   "FiClock": FiClock,
@@ -104,9 +109,21 @@ const iconMap = {
   "FiGlobe": FiGlobe,
   "FiMonitor": FiMonitor,
   "FiCode": FiCode,
-  
+
   // React Icons IO
   "IoMdColorFill": IoMdColorFill,
+  "IoIosColorPalette": IoIosColorPalette,
+  "IoIosSave": IoIosSave,
+  "IoIosTrophy": IoIosTrophy,
+  // React Icons FA
+  "FaGraduationCap": FaGraduationCap,
+  "FaArrowsRotate": FaArrowsRotate,
+  "FaBookOpen": FaBookOpen,
+   "FaFolder": FaFolder,
+  // React Icons SI
+  "SlNotebook": SlNotebook,
+
+
 };
 
 // Function to get icon component by name
@@ -153,6 +170,15 @@ export const ICONS = {
   LAYOUT: "FiLayout",
   BOOK: "FiBook",
   COLOR_FILL: "IoMdColorFill",
+  COLOR_PALETTE: "IoIosColorPalette",
+  ARROWS_ROTATE: "FaArrowsRotate",
+  SAVE: "IoIosSave",
+  TROPHY: "IoIosTrophy",
+  GRADUATION_CAP: "FaGraduationCap",
+  BOOK_OPEN: "FaBookOpen",
+  NOTEBOOK: "SlNotebook",
+  FOLDER: "FaFolder",
+
 };
 
 export default { getIcon, ICONS };
