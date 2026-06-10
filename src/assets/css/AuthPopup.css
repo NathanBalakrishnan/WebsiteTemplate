@@ -1,0 +1,126 @@
+/* src/assets/css/AuthPopup.css */
+.auth-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.auth-popup-container {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  animation: slideUp 0.3s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.auth-popup-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.auth-popup-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.auth-popup-message {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.auth-popup-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.auth-popup-cancel,
+.auth-popup-confirm {
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.auth-popup-cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.auth-popup-cancel:hover {
+  background: #e0e0e0;
+}
+
+.auth-popup-confirm {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.auth-popup-confirm:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+@media (max-width: 480px) {
+  .auth-popup-container {
+    padding: 20px;
+    width: 85%;
+  }
+  
+  .auth-popup-icon {
+    font-size: 48px;
+  }
+  
+  .auth-popup-title {
+    font-size: 20px;
+  }
+  
+  .auth-popup-buttons {
+    gap: 10px;
+  }
+  
+  .auth-popup-cancel,
+  .auth-popup-confirm {
+    padding: 8px 18px;
+    font-size: 13px;
+  }
+}
