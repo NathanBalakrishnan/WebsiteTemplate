@@ -1,0 +1,205 @@
+{
+  "templateId": 3,
+  "title": "Shopping Cart",
+  "themeScope": "shopping-cart",
+  "image": "../src/assets/template-image/template3.png",
+  "description": "Modern overlay design with background images.",
+  "shoppingContent": {
+    "heroTitle": "Organic Foods at your Doorsteps",
+    "heroSubtitle": "Fresh, healthy, and delicious groceries delivered to your home",
+    "buttonStart": "START SHOPPING",
+    "buttonJoin": "JOIN NOW",
+    "stat1Label": "PRODUCTS",
+    "stat2Label": "HAPPY CUSTOMERS",
+    "stat3Label": "STORES",
+    "categoriesTitle": "Shop by Category",
+    "productsTitle": "Featured Products",
+    "searchPlaceholder": "Search products..."
+  },
+  "themes": [
+    {
+      "id": "teal",
+      "name": "Teal Coast",
+      "accentColor": "#14b8a6",
+      "buttonBg": "#14b8a6",
+      "textColor": "#1f2937",
+      "cardBg": "#ffffff",
+      "cardBorder": "#e2e8f0",
+      "headerBg": "#16275B",
+      "footerBg": "#16275B",
+      "logoColor": "#FFFFFF",
+      "menuColor": "#FFFFFF",
+      "menuHoverColor": "#38BDF8"
+    },
+    {
+      "id": "purple",
+      "name": "Midnight Neon"
+    },
+    {
+      "id": "orange",
+      "name": "Sunset Warmth"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Fruits",
+      "icon": "🍎",
+      "slug": "fruits"
+    },
+    {
+      "id": 2,
+      "name": "Vegetables",
+      "icon": "🥬",
+      "slug": "vegetables"
+    },
+    {
+      "id": 3,
+      "name": "Dairy",
+      "icon": "🥛",
+      "slug": "dairy"
+    },
+    {
+      "id": 4,
+      "name": "Meat",
+      "icon": "🍗",
+      "slug": "meat"
+    },
+    {
+      "id": 5,
+      "name": "Bakery",
+      "icon": "🥖",
+      "slug": "bakery"
+    },
+    {
+      "id": 6,
+      "name": "Beverages",
+      "icon": "🥤",
+      "slug": "beverages"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "Organic Bananas",
+      "category": "Fruits",
+      "price": 4.99,
+      "oldPrice": 6.99,
+      "unit": "bunch",
+      "image": "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=300",
+      "organic": true,
+      "rating": 5
+    },
+    {
+      "id": 2,
+      "name": "Fresh Strawberries",
+      "category": "Fruits",
+      "price": 5.99,
+      "oldPrice": 8.99,
+      "unit": "250g",
+      "image": "https://images.unsplash.com/photo-1464965911861-746a04b4bca5?w=300",
+      "organic": true,
+      "rating": 5
+    },
+    {
+      "id": 3,
+      "name": "Organic Avocado",
+      "category": "Fruits",
+      "price": 3.49,
+      "oldPrice": 5.49,
+      "unit": "each",
+      "image": "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=300",
+      "organic": true,
+      "rating": 4
+    },
+    {
+      "id": 4,
+      "name": "Fresh Broccoli",
+      "category": "Vegetables",
+      "price": 2.99,
+      "oldPrice": 4.99,
+      "unit": "each",
+      "image": "https://images.unsplash.com/photo-1584270354949-c26b0d5b4a0c?w=300",
+      "organic": true,
+      "rating": 4
+    },
+    {
+      "id": 5,
+      "name": "Organic Milk",
+      "category": "Dairy",
+      "price": 4.49,
+      "oldPrice": 5.99,
+      "unit": "1L",
+      "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300",
+      "organic": true,
+      "rating": 5
+    },
+    {
+      "id": 6,
+      "name": "Free Range Eggs",
+      "category": "Dairy",
+      "price": 5.99,
+      "oldPrice": 7.99,
+      "unit": "dozen",
+      "image": "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=300",
+      "organic": false,
+      "rating": 4
+    },
+    {
+      "id": 7,
+      "name": "Chicken Breast",
+      "category": "Meat",
+      "price": 8.99,
+      "oldPrice": 11.99,
+      "unit": "500g",
+      "image": "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=300",
+      "organic": true,
+      "rating": 5
+    },
+    {
+      "id": 8,
+      "name": "Sourdough Bread",
+      "category": "Bakery",
+      "price": 4.99,
+      "oldPrice": 6.99,
+      "unit": "loaf",
+      "image": "https://images.unsplash.com/photo-1585478259715-876acc5be8eb?w=300",
+      "organic": true,
+      "rating": 5
+    },
+    {
+      "id": 9,
+      "name": "Orange Juice",
+      "category": "Beverages",
+      "price": 3.99,
+      "oldPrice": 5.99,
+      "unit": "1L",
+      "image": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=300",
+      "organic": false,
+      "rating": 4
+    }
+  ],
+  "icons": {
+    "productIcon": "FiShoppingBag",
+    "customerIcon": "FiUsers",
+    "storeIcon": "FiMapPin"
+  },
+  "stats": {
+    "products": 9000,
+    "customers": 50000,
+    "stores": 25
+  },
+  "id": 1,
+  "isCustomized": true,
+  "createdAt": "2026-06-11T08:01:00.391Z",
+  "lastModified": "2026-06-11T08:01:10.115Z",
+  "home": {},
+  "about": {
+    "sections": {}
+  },
+  "courses": {
+    "details": {}
+  },
+  "achievements": {},
+  "contact": {}
+}

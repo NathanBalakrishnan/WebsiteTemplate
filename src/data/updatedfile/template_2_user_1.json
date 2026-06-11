@@ -1,0 +1,147 @@
+{
+  "templateId": 2,
+  "title": "SLIDES",
+  "image": "../src/assets/template-image/template2.png",
+  "description": "Modern overlay design with background images.",
+  "themeScope": "full-page",
+  "styles": {
+    "navbar": {
+      "background": "transparent",
+      "logoColor": "#ffffff",
+      "menuColor": "#ffffff",
+      "menuGap": "32px",
+      "paddingTop": "24px"
+    },
+    "home": {
+      "layout": "split",
+      "titleColor": "#ffffff",
+      "titleSize": "64px",
+      "descriptionColor": "#d1d5db",
+      "descriptionSize": "18px",
+      "buttonBg": "#06b6d4",
+      "buttonText": "#ffffff",
+      "secondaryButtonBg": "#ffffff",
+      "secondaryButtonText": "#374151",
+      "imageWidth": "500px"
+    }
+  },
+  "themes": [
+    {
+      "id": "teal-coast",
+      "name": "Teal Coast",
+      "overlayBg": "rgba(11, 37, 34, 0.75)",
+      "accentColor": "#06b6d4",
+      "accentHover": "#0891b2",
+      "buttonBg": "#06b6d4",
+      "cardBg": "rgba(255,255,255,0.1)",
+      "textColor": "#1f2937",
+      "cardBorder": "#e2e8f0",
+      "headerBg": "transparent",
+      "footerBg": "transparent",
+      "logoColor": "#FFFFFF",
+      "menuColor": "#FFFFFF",
+      "menuHoverColor": "#38BDF8"
+    },
+    {
+      "id": "midnight-neon",
+      "name": "Midnight Neon",
+      "overlayBg": "rgba(15, 12, 30, 0.8)",
+      "accentColor": "#a855f7",
+      "accentHover": "#9333ea",
+      "buttonBg": "#a855f7",
+      "cardBg": "rgba(168, 85, 247, 0.1)"
+    },
+    {
+      "id": "sunset-warmth",
+      "name": "Sunset Warmth",
+      "overlayBg": "rgba(43, 20, 10, 0.75)",
+      "accentColor": "#f97316",
+      "accentHover": "#ea580c",
+      "buttonBg": "#f97316",
+      "cardBg": "rgba(249, 115, 22, 0.1)"
+    }
+  ],
+  "navigation": [
+    {
+      "name": "Home",
+      "label": "Homefvfvbbgbgb",
+      "type": "link"
+    },
+    {
+      "name": "About Us",
+      "label": "About Us",
+      "type": "dropdown",
+      "menuItems": [
+        "Our Vision",
+        "Leadership",
+        "History",
+        "Campus Life"
+      ]
+    },
+    {
+      "name": "Courses",
+      "label": "Courses",
+      "type": "dropdown",
+      "menuItems": [
+        "Engineering",
+        "Management",
+        "Data Science",
+        "Design"
+      ]
+    },
+    {
+      "name": "Achievements",
+      "label": "Achievements",
+      "type": "link"
+    },
+    {
+      "name": "Contact",
+      "label": "Contact",
+      "type": "link"
+    }
+  ],
+  "home": {
+    "tagline": "Designers are meant to be loved, not to be understood.",
+    "description": "The sudden hunch, the creative leap of mind that \"sees\" in a flash how to solve a problem in a simple way, is something quite different.",
+    "primaryCta": "Get Started",
+    "secondaryCta": "Learn more",
+    "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80"
+  },
+  "about": {
+    "title": "About Our Institution",
+    "sections": {
+      "Our Vision": "To be a global leader in education, fostering creativity and technical excellence.",
+      "Leadership": "Led by world-class educators and industry veterans dedicated to student success.",
+      "History": "Founded in 1995, we have graduated over 20,000 students who now lead global enterprises.",
+      "Campus Life": "A vibrant 50-acre campus equipped with modern labs, sports complexes, and creative hubs."
+    }
+  },
+  "courses": {
+    "title": "Academic Programs Offered",
+    "details": {
+      "Engineering": "B.Tech & M.Tech programs in CSE, ECE, and Mechanical Engineering.",
+      "Management": "MBA programs focusing on Data Analytics, Marketing, and Global Finance.",
+      "Data Science": "Specialized certifications and degrees in AI, Machine Learning, and Big Data.",
+      "Design": "B.Des in UI/UX Design, Fashion, and Industrial Product Design."
+    }
+  },
+  "achievements": {
+    "title": "Milestones & Recognition",
+    "list": [
+      "Ranked Top 10 National Engineering Colleges in 2025.",
+      "94% Placement rate with top Fortune 500 companies.",
+      "Over $5M secured in research grants this year alone.",
+      "Winner of the National Green Campus Award."
+    ]
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "address": "123 Education Lane, Tech City, TC 56001",
+    "phone": "+1 (555) 019-2834",
+    "email": "admissions@horizoninstitute.edu"
+  },
+  "id": 1,
+  "isCustomized": true,
+  "createdAt": "2026-06-11T07:48:37.698Z",
+  "lastModified": "2026-06-11T07:48:43.484Z"
+}

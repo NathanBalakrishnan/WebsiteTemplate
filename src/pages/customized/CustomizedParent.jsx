@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
+import { openDB } from 'idb';
 import siteData from '../../data/multisiteData.json';
 import Navbar from '../../components/Navbar';
 import Home from '../preview/Home';
@@ -10,20 +11,16 @@ import Achievements from '../preview/Achievements';
 import Contact from '../preview/Contact';
 import ShoppingCart from '../preview/shopping-cart/ShoppingCart';
 import ShoppingCheckout from '../preview/shopping-cart/ShoppingCheckout';
-import ProductDetail from '../preview/shopping-cart/ProductDetail';
-import CategoryPage from '../preview/shopping-cart/CategoryPage';
 import CustomizationPanel from './CustomizationPanel';
 import { 
   saveUserCustomizedTemplate, 
   loadUserCustomizedTemplate,
-  exportUserCustomizations,
-  getUserTemplate,
   resetUserTemplate
 } from '../../utils/userTemplateStorage';
 import "../../assets/css/PreviewTemplate.css";
 
 export default function CustomizedParent() {
-  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURN
+  // ==================== STATE ====================
   const [activeTab, setActiveTab] = useState('Home');
   const [theme, setTheme] = useState('classic');
   const [cart, setCart] = useState([]);
@@ -31,59 +28,22 @@ export default function CustomizedParent() {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const [customColors, setCustomColors] = useState({
-    primaryColor: '',
-    accentColor: '',
-    textColor: '',
-    descriptionColor: '',
-    buttonBg: '',
-    cardBg: '',
-    cardBorder: '',
-    headerBg: '',
-    footerBg: '',
-    logoColor: '',
-    menuColor: '',
-    menuHoverColor: '',
-    overlayBg: ''
+    primaryColor: '', accentColor: '', textColor: '', descriptionColor: '',
+    buttonBg: '', cardBg: '', cardBorder: '', headerBg: '', footerBg: '',
+    logoColor: '', menuColor: '', menuHoverColor: '', overlayBg: ''
   });
-
   const [textOverrides, setTextOverrides] = useState({
-    homeTagline: '',
-    homeDescription: '',
-    homeSubtitle: '',
-    homePrimaryCta: '',
-    homeImage: '',
-    aboutTitle: '',
-    aboutVision: '',
-    aboutLeadership: '',
-    aboutHistory: '',
-    aboutCampusLife: '',
-    coursesTitle: '',
-    coursesEngineering: '',
-    coursesManagement: '',
-    coursesDataScience: '',
-    coursesDesign: '',
-    achievementsTitle: '',
-    achievementsList: [],
-    contactTitle: '',
-    contactAddress: '',
-    contactPhone: '',
-    contactEmail: '',
+    homeTagline: '', homeDescription: '', homeSubtitle: '', homePrimaryCta: '', homeImage: '',
+    aboutTitle: '', aboutVision: '', aboutLeadership: '', aboutHistory: '', aboutCampusLife: '',
+    coursesTitle: '', coursesEngineering: '', coursesManagement: '', coursesDataScience: '', coursesDesign: '',
+    achievementsTitle: '', achievementsList: [],
+    contactTitle: '', contactAddress: '', contactPhone: '', contactEmail: '',
     navigationItems: [],
-    shoppingHeroTitle: '',
-    shoppingHeroSubtitle: '',
-    shoppingButtonStart: '',
-    shoppingButtonJoin: '',
-    shoppingCategoriesTitle: '',
-    shoppingProductsTitle: '',
-    shoppingSearchPlaceholder: '',
-    shoppingStat1Label: '',
-    shoppingStat2Label: '',
-    shoppingStat3Label: '',
-    statProducts: 0,
-    statCustomers: 0,
-    statStores: 0,
-    categories: [],
-    products: [],
+    shoppingHeroTitle: '', shoppingHeroSubtitle: '', shoppingButtonStart: '', shoppingButtonJoin: '',
+    shoppingCategoriesTitle: '', shoppingProductsTitle: '', shoppingSearchPlaceholder: '',
+    shoppingStat1Label: '', shoppingStat2Label: '', shoppingStat3Label: '',
+    statProducts: 0, statCustomers: 0, statStores: 0,
+    categories: [], products: [],
   });
 
   const location = useLocation();
@@ -92,119 +52,118 @@ export default function CustomizedParent() {
   const saveTimeoutRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
   const userId = user?.id;
-
   const selectedTemplateId = location.state?.templateId;
-  
-  // Find original template from siteData (without user-specific data)
-  const originalTemplate = siteData.find(
-    (template) => template.templateId === selectedTemplateId
-  );
-
+  const originalTemplate = siteData.find(t => t.templateId === selectedTemplateId);
   const [loadedTemplate, setLoadedTemplate] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Load user's customized template or create user-specific version
+  // ==================== FOLDER PERSISTENCE (IndexedDB) ====================
+  const DB_NAME = 'TemplateApp';
+  const STORE_NAME = 'folderHandle';
+  let folderHandleCache = null;
+
+  async function getFolderHandle() {
+    if (folderHandleCache) return folderHandleCache;
+
+    const db = await openDB(DB_NAME, 1, {
+      upgrade(db) { db.createObjectStore(STORE_NAME); }
+    });
+    let savedHandle = await db.get(STORE_NAME, 'dirHandle');
+    if (savedHandle && (await savedHandle.queryPermission({ mode: 'readwrite' }) === 'granted')) {
+      folderHandleCache = savedHandle;
+      return folderHandleCache;
+    }
+    // Ask user to pick a folder (only once per browser)
+    folderHandleCache = await window.showDirectoryPicker();
+    await db.put(STORE_NAME, folderHandleCache, 'dirHandle');
+    return folderHandleCache;
+  }
+
+  // ==================== LOAD TEMPLATE (folder first, then localStorage) ====================
   useEffect(() => {
     const loadTemplate = async () => {
-      if (originalTemplate && userId) {
-        // Try to load existing customization
-        const userTemplate = loadUserCustomizedTemplate(userId, selectedTemplateId, originalTemplate);
-        
-        // If no customization exists, create a user-specific copy
-        if (!userTemplate.isCustomized && userTemplate.id !== userId) {
-          const userSpecificTemplate = {
-            ...originalTemplate,
-            id: userId,
-            templateId: selectedTemplateId,
-            isCustomized: false,
-            createdAt: new Date().toISOString()
-          };
-          setLoadedTemplate(userSpecificTemplate);
-        } else {
-          setLoadedTemplate(userTemplate);
-        }
-      } else if (originalTemplate) {
-        setLoadedTemplate(originalTemplate);
+      if (!originalTemplate || !userId) return;
+
+      let folderData = null;
+      try {
+        const dirHandle = await getFolderHandle();
+        const fileName = `template_${selectedTemplateId}_user_${userId}.json`;
+        const fileHandle = await dirHandle.getFileHandle(fileName);
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+        folderData = JSON.parse(text);
+      } catch (err) { /* file not found – ignore */ }
+
+      if (folderData) {
+        setLoadedTemplate(folderData);
+        // sync to localStorage as fallback
+        saveUserCustomizedTemplate(userId, selectedTemplateId, folderData);
+      } else {
+        const localData = loadUserCustomizedTemplate(userId, selectedTemplateId, originalTemplate);
+        setLoadedTemplate(localData);
       }
     };
-    
     loadTemplate();
   }, [originalTemplate, userId, selectedTemplateId]);
 
   // Initialize theme from loaded template
   useEffect(() => {
-    if (loadedTemplate?.themes?.[0]) {
-      setTheme(loadedTemplate.themes[0].id);
-    }
+    if (loadedTemplate?.themes?.[0]) setTheme(loadedTemplate.themes[0].id);
   }, [loadedTemplate]);
 
-  // Load cart from localStorage
+  // ==================== CART PERSISTENCE ====================
   useEffect(() => {
     const saved = localStorage.getItem(`cart_${selectedTemplateId}_${userId || 'guest'}`);
     if (saved) setCart(JSON.parse(saved));
   }, [selectedTemplateId, userId]);
 
-  // Save cart to localStorage
   useEffect(() => {
     if (loadedTemplate?.themeScope === 'shopping-cart') {
       localStorage.setItem(`cart_${selectedTemplateId}_${userId || 'guest'}`, JSON.stringify(cart));
     }
   }, [cart, selectedTemplateId, userId, loadedTemplate]);
 
-  // Auto-save customization with debounce
+  // ==================== AUTO-SAVE (folder + localStorage) ====================
   useEffect(() => {
     if (!loadedTemplate || !userId || !hasUnsavedChanges) return;
-    
-    // Clear previous timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    
-    // Set saving indicator
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     setIsSaving(true);
-    
-    // Debounce save to avoid too many writes
-    saveTimeoutRef.current = setTimeout(() => {
-      const customizedTemplate = buildCustomizedTemplate();
-      if (customizedTemplate) {
-        const success = saveUserCustomizedTemplate(userId, selectedTemplateId, customizedTemplate);
-        if (success) {
-          setLastSaved(new Date());
-          setHasUnsavedChanges(false);
-          console.log('✅ Auto-saved customization for user', userId, 'template', selectedTemplateId);
-        }
+
+    saveTimeoutRef.current = setTimeout(async () => {
+      const customized = buildCustomizedTemplate();
+      if (!customized) return;
+
+      // 1. Save to localStorage (quick fallback)
+      saveUserCustomizedTemplate(userId, selectedTemplateId, customized);
+
+      // 2. Save to folder (cross‑browser sync)
+      try {
+        const dirHandle = await getFolderHandle();
+        const fileName = `template_${selectedTemplateId}_user_${userId}.json`;
+        const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(JSON.stringify(customized, null, 2));
+        await writable.close();
+        setLastSaved(new Date());
+        setHasUnsavedChanges(false);
+      } catch (err) {
+        console.warn('Folder save failed – maybe permission lost?', err);
+        setLastSaved(new Date());
+        setHasUnsavedChanges(false);
       }
       setIsSaving(false);
     }, 1500);
-    
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [
-    theme, 
-    customColors, 
-    textOverrides, 
-    userId, 
-    selectedTemplateId, 
-    loadedTemplate,
-    hasUnsavedChanges
-  ]);
 
-  // Mark that changes have been made
-  const markAsChanged = () => {
-    if (!hasUnsavedChanges) {
-      setHasUnsavedChanges(true);
-    }
-  };
+    return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
+  }, [theme, customColors, textOverrides, userId, selectedTemplateId, loadedTemplate, hasUnsavedChanges]);
 
+  const markAsChanged = () => { if (!hasUnsavedChanges) setHasUnsavedChanges(true); };
+
+  // ==================== CART FUNCTIONS ====================
   const addToCart = (product) => {
     const existing = cart.find(item => item.id === product.id);
     if (existing) {
-      setCart(cart.map(item => 
-        item.id === product.id ? { ...item, qty: item.qty + 1 } : item
-      ));
+      setCart(cart.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item));
     } else {
       setCart([...cart, { ...product, qty: 1 }]);
     }
@@ -217,11 +176,8 @@ export default function CustomizedParent() {
   };
 
   const updateQty = (id, qty) => {
-    if (qty <= 0) {
-      removeFromCart(id);
-    } else {
-      setCart(cart.map(item => item.id === id ? { ...item, qty } : item));
-    }
+    if (qty <= 0) removeFromCart(id);
+    else setCart(cart.map(item => item.id === id ? { ...item, qty } : item));
     markAsChanged();
   };
 
@@ -229,11 +185,14 @@ export default function CustomizedParent() {
     setCart([]);
     markAsChanged();
   };
-  
+
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
+  // ==================== THEME & COLORS ====================
   const themeScope = loadedTemplate?.themeScope || "full-page";
+  const isOverlayDesign = themeScope === "full-page";
+  const isShoppingCart = themeScope === "shopping-cart";
   const currentThemeData = loadedTemplate?.themes?.find(t => t.id === theme);
 
   const defaultColors = {
@@ -245,7 +204,6 @@ export default function CustomizedParent() {
     menuColor: currentThemeData?.menuColor || "#FFFFFF",
     menuHoverColor: currentThemeData?.menuHoverColor || "#38BDF8",
     primaryColor: currentThemeData?.primaryColor || "#1e3a8a",
-    secondaryColor: currentThemeData?.secondaryColor || "#3b82f6",
     textColor: currentThemeData?.textColor || "#1f2937",
     descriptionColor: currentThemeData?.descriptionColor || "#4b5563",
     cardBg: currentThemeData?.cardBg || "#ffffff",
@@ -271,67 +229,31 @@ export default function CustomizedParent() {
   const handleColorChange = (colorKey, value) => {
     setCustomColors(prev => {
       const newColors = { ...prev, [colorKey]: value };
-      if (colorKey === 'accentColor') {
-        document.documentElement.style.setProperty('--accent-color', value);
-      }
-      if (colorKey === 'buttonBg') {
-        document.documentElement.style.setProperty('--button-bg', value);
-      }
-      if (colorKey === 'textColor') {
-        document.documentElement.style.setProperty('--text-color', value);
-      }
-      if (colorKey === 'cardBg') {
-        document.documentElement.style.setProperty('--card-bg', value);
-      }
-      if (colorKey === 'cardBorder') {
-        document.documentElement.style.setProperty('--card-border', value);
-      }
+      if (colorKey === 'accentColor') document.documentElement.style.setProperty('--accent-color', value);
+      if (colorKey === 'buttonBg') document.documentElement.style.setProperty('--button-bg', value);
+      if (colorKey === 'textColor') document.documentElement.style.setProperty('--text-color', value);
+      if (colorKey === 'cardBg') document.documentElement.style.setProperty('--card-bg', value);
+      if (colorKey === 'cardBorder') document.documentElement.style.setProperty('--card-border', value);
       return newColors;
     });
     markAsChanged();
   };
 
   const handleReset = () => {
-    if (window.confirm('Are you sure you want to reset all customization? This will revert to the original template.')) {
+    if (window.confirm('Reset all customizations? This will revert to original template.')) {
       setCustomColors(defaultColors);
       setTextOverrides({
-        homeTagline: '',
-        homeDescription: '',
-        homeSubtitle: '',
-        homePrimaryCta: '',
-        homeImage: '',
-        aboutTitle: '',
-        aboutVision: '',
-        aboutLeadership: '',
-        aboutHistory: '',
-        aboutCampusLife: '',
-        coursesTitle: '',
-        coursesEngineering: '',
-        coursesManagement: '',
-        coursesDataScience: '',
-        coursesDesign: '',
-        achievementsTitle: '',
-        achievementsList: [],
-        contactTitle: '',
-        contactAddress: '',
-        contactPhone: '',
-        contactEmail: '',
+        homeTagline: '', homeDescription: '', homeSubtitle: '', homePrimaryCta: '', homeImage: '',
+        aboutTitle: '', aboutVision: '', aboutLeadership: '', aboutHistory: '', aboutCampusLife: '',
+        coursesTitle: '', coursesEngineering: '', coursesManagement: '', coursesDataScience: '', coursesDesign: '',
+        achievementsTitle: '', achievementsList: [],
+        contactTitle: '', contactAddress: '', contactPhone: '', contactEmail: '',
         navigationItems: [],
-        shoppingHeroTitle: '',
-        shoppingHeroSubtitle: '',
-        shoppingButtonStart: '',
-        shoppingButtonJoin: '',
-        shoppingCategoriesTitle: '',
-        shoppingProductsTitle: '',
-        shoppingSearchPlaceholder: '',
-        shoppingStat1Label: '',
-        shoppingStat2Label: '',
-        shoppingStat3Label: '',
-        statProducts: 0,
-        statCustomers: 0,
-        statStores: 0,
-        categories: [],
-        products: [],
+        shoppingHeroTitle: '', shoppingHeroSubtitle: '', shoppingButtonStart: '', shoppingButtonJoin: '',
+        shoppingCategoriesTitle: '', shoppingProductsTitle: '', shoppingSearchPlaceholder: '',
+        shoppingStat1Label: '', shoppingStat2Label: '', shoppingStat3Label: '',
+        statProducts: 0, statCustomers: 0, statStores: 0,
+        categories: [], products: [],
       });
       applyColorVariables(defaultColors);
       setHasUnsavedChanges(true);
@@ -339,10 +261,7 @@ export default function CustomizedParent() {
   };
 
   const handleTextChangeFromPanel = (field, value) => {
-    setTextOverrides(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setTextOverrides(prev => ({ ...prev, [field]: value }));
     markAsChanged();
   };
 
@@ -374,13 +293,10 @@ export default function CustomizedParent() {
     }
   }, [theme, themeScope]);
 
-  const isOverlayDesign = themeScope === "full-page";
-  const isShoppingCart = themeScope === "shopping-cart";
-
+  // ==================== BUILD CURRENT CUSTOMIZATION ====================
   const buildCustomizedTemplate = () => {
     if (!loadedTemplate) return null;
-    
-    const customizedTemplate = {
+    const customized = {
       ...loadedTemplate,
       id: userId || loadedTemplate.id,
       templateId: selectedTemplateId,
@@ -441,9 +357,8 @@ export default function CustomizedParent() {
       },
       navigation: textOverrides.navigationItems.length ? textOverrides.navigationItems : loadedTemplate.navigation,
     };
-
     if (isShoppingCart) {
-      customizedTemplate.shoppingContent = {
+      customized.shoppingContent = {
         ...loadedTemplate.shoppingContent,
         heroTitle: textOverrides.shoppingHeroTitle || loadedTemplate.shoppingContent?.heroTitle,
         heroSubtitle: textOverrides.shoppingHeroSubtitle || loadedTemplate.shoppingContent?.heroSubtitle,
@@ -456,112 +371,72 @@ export default function CustomizedParent() {
         stat2Label: textOverrides.shoppingStat2Label || loadedTemplate.shoppingContent?.stat2Label,
         stat3Label: textOverrides.shoppingStat3Label || loadedTemplate.shoppingContent?.stat3Label,
       };
-      customizedTemplate.stats = {
+      customized.stats = {
         products: textOverrides.statProducts !== 0 ? textOverrides.statProducts : loadedTemplate.stats?.products,
         customers: textOverrides.statCustomers !== 0 ? textOverrides.statCustomers : loadedTemplate.stats?.customers,
         stores: textOverrides.statStores !== 0 ? textOverrides.statStores : loadedTemplate.stats?.stores,
       };
-      customizedTemplate.categories = textOverrides.categories.length ? textOverrides.categories : loadedTemplate.categories;
-      customizedTemplate.products = textOverrides.products.length ? textOverrides.products : loadedTemplate.products;
+      customized.categories = textOverrides.categories.length ? textOverrides.categories : loadedTemplate.categories;
+      customized.products = textOverrides.products.length ? textOverrides.products : loadedTemplate.products;
     }
-
-    return customizedTemplate;
+    return customized;
   };
 
+  // ==================== EVENT HANDLERS ====================
   const handleGenerateJSON = () => {
-    const customizedTemplate = buildCustomizedTemplate();
-    if (!customizedTemplate) return;
-    
+    const customized = buildCustomizedTemplate();
+    if (!customized) return;
     if (userId) {
-      saveUserCustomizedTemplate(userId, selectedTemplateId, customizedTemplate);
+      saveUserCustomizedTemplate(userId, selectedTemplateId, customized);
       setHasUnsavedChanges(false);
-      alert(`✅ Template customized and saved for ${user?.name}!`);
-    }
-    
-    // const jsonString = JSON.stringify(customizedTemplate, null, 2);
-    // const blob = new Blob([jsonString], { type: 'application/json' });
-    // const url = URL.createObjectURL(blob);
-    // const link = document.createElement('a');
-    // link.href = url;
-    // link.download = `user_${userId || 'guest'}_template_${selectedTemplateId}_customized.json`;
-    // document.body.appendChild(link);
-    // link.click();
-    // document.body.removeChild(link);
-    // URL.revokeObjectURL(url);
-  };
-
-  const handleExportAllUserCustomizations = () => {
-    if (userId) {
-      exportUserCustomizations(userId);
-      // const blob = new Blob([exportData], { type: 'application/json' });
-      // const url = URL.createObjectURL(blob);
-      // const link = document.createElement('a');
-      // link.href = url;
-      // link.download = `user_${userId}_all_customizations_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
-      // document.body.appendChild(link);
-      // link.click();
-      // document.body.removeChild(link);
-      // URL.revokeObjectURL(url);
-      
-      alert(`✅ Exported all customizations for user ${user?.name}`);
+      alert(`✅ Saved for ${user?.name}!`);
     }
   };
 
   const handleResetToOriginal = async () => {
-    if (window.confirm('⚠️ Are you sure you want to reset to the original template? All your customizations will be lost permanently.')) {
-      if (userId && originalTemplate) {
-        const success = resetUserTemplate(userId, selectedTemplateId, originalTemplate);
-        if (success) {
-          // Reload the template
-          const resetTemplate = loadUserCustomizedTemplate(userId, selectedTemplateId, originalTemplate);
-          setLoadedTemplate(resetTemplate);
-          setTextOverrides({
-            homeTagline: '',
-            homeDescription: '',
-            homeSubtitle: '',
-            homePrimaryCta: '',
-            homeImage: '',
-            aboutTitle: '',
-            aboutVision: '',
-            aboutLeadership: '',
-            aboutHistory: '',
-            aboutCampusLife: '',
-            coursesTitle: '',
-            coursesEngineering: '',
-            coursesManagement: '',
-            coursesDataScience: '',
-            coursesDesign: '',
-            achievementsTitle: '',
-            achievementsList: [],
-            contactTitle: '',
-            contactAddress: '',
-            contactPhone: '',
-            contactEmail: '',
-            navigationItems: [],
-            shoppingHeroTitle: '',
-            shoppingHeroSubtitle: '',
-            shoppingButtonStart: '',
-            shoppingButtonJoin: '',
-            shoppingCategoriesTitle: '',
-            shoppingProductsTitle: '',
-            shoppingSearchPlaceholder: '',
-            shoppingStat1Label: '',
-            shoppingStat2Label: '',
-            shoppingStat3Label: '',
-            statProducts: 0,
-            statCustomers: 0,
-            statStores: 0,
-            categories: [],
-            products: [],
-          });
-          setHasUnsavedChanges(false);
-          alert('✅ Template reset to original successfully!');
-        }
-      }
-    }
-  };
+  if (window.confirm('Reset to original template? All customizations lost.')) {
+    if (userId && originalTemplate) {
+      // 1. Clear localStorage (existing reset)
+      resetUserTemplate(userId, selectedTemplateId, originalTemplate);
 
-  // Prepare data with overrides (only if loadedTemplate exists)
+      // 2. Delete the file from the user‑selected folder
+      try {
+        const dirHandle = await getFolderHandle();
+        const fileName = `template_${selectedTemplateId}_user_${userId}.json`;
+        const fileHandle = await dirHandle.getFileHandle(fileName);
+        await fileHandle.remove(); // removes the file from disk
+        console.log(`Deleted ${fileName} from folder.`);
+      } catch (err) {
+        // File might not exist – that's fine
+        console.warn('No file to delete in folder (or permission issue)', err);
+      }
+
+      // 3. Reload the original template into state
+      const resetTemplate = loadUserCustomizedTemplate(userId, selectedTemplateId, originalTemplate);
+      setLoadedTemplate(resetTemplate);
+
+      // 4. Reset all text overrides to empty
+      setTextOverrides({
+        homeTagline: '', homeDescription: '', homeSubtitle: '', homePrimaryCta: '', homeImage: '',
+        aboutTitle: '', aboutVision: '', aboutLeadership: '', aboutHistory: '', aboutCampusLife: '',
+        coursesTitle: '', coursesEngineering: '', coursesManagement: '', coursesDataScience: '', coursesDesign: '',
+        achievementsTitle: '', achievementsList: [],
+        contactTitle: '', contactAddress: '', contactPhone: '', contactEmail: '',
+        navigationItems: [],
+        shoppingHeroTitle: '', shoppingHeroSubtitle: '', shoppingButtonStart: '', shoppingButtonJoin: '',
+        shoppingCategoriesTitle: '', shoppingProductsTitle: '', shoppingSearchPlaceholder: '',
+        shoppingStat1Label: '', shoppingStat2Label: '', shoppingStat3Label: '',
+        statProducts: 0, statCustomers: 0, statStores: 0,
+        categories: [], products: [],
+      });
+
+      setHasUnsavedChanges(false);
+      alert('✅ Reset to original. Saved file removed from folder.');
+    }
+  }
+};
+
+  // ==================== PREPARE DATA FOR PREVIEW ====================
   const shoppingContentData = loadedTemplate ? {
     ...loadedTemplate.shoppingContent,
     heroTitle: textOverrides.shoppingHeroTitle || loadedTemplate.shoppingContent?.heroTitle || "Organic Foods at your Doorsteps",
@@ -642,321 +517,75 @@ export default function CustomizedParent() {
 
   const navigationData = textOverrides.navigationItems.length ? textOverrides.navigationItems : loadedTemplate?.navigation || [];
 
+  // ==================== RENDER CONTENT ====================
   const renderContent = () => {
     if (!loadedTemplate) return null;
-    
     if (isShoppingCart) {
       switch(activeTab) {
-        case 'Home':
-          return (
-            <Home 
-              data={mergedShoppingTemplate}
-              isShoppingCart={true}
-              accentColor={accentColor}
-              addToCart={addToCart}
-              searchQuery={search}
-              setSearch={setSearch}
-              navigate={navigate}
-            />
-          );
-        case 'Cart':
-          return (
-            <ShoppingCart 
-              cart={cart}
-              removeFromCart={removeFromCart}
-              updateQty={updateQty}
-              cartTotal={cartTotal}
-              setActiveTab={setActiveTab}
-              accentColor={accentColor}
-            />
-          );
-        case 'Checkout':
-          return (
-            <ShoppingCheckout 
-              cart={cart}
-              cartTotal={cartTotal}
-              clearCart={clearCart}
-              setActiveTab={setActiveTab}
-              accentColor={accentColor}
-            />
-          );
-        default:
-          return (
-            <Home 
-              data={mergedShoppingTemplate}
-              isShoppingCart={true}
-              accentColor={accentColor}
-              addToCart={addToCart}
-              searchQuery={search}
-              setSearch={setSearch}
-              navigate={navigate}
-            />
-          );
+        case 'Home': return <Home data={mergedShoppingTemplate} isShoppingCart={true} accentColor={accentColor} addToCart={addToCart} searchQuery={search} setSearch={setSearch} navigate={navigate} />;
+        case 'Cart': return <ShoppingCart cart={cart} removeFromCart={removeFromCart} updateQty={updateQty} cartTotal={cartTotal} setActiveTab={setActiveTab} accentColor={accentColor} />;
+        case 'Checkout': return <ShoppingCheckout cart={cart} cartTotal={cartTotal} clearCart={clearCart} setActiveTab={setActiveTab} accentColor={accentColor} />;
+        default: return <Home data={mergedShoppingTemplate} isShoppingCart={true} accentColor={accentColor} addToCart={addToCart} searchQuery={search} setSearch={setSearch} navigate={navigate} />;
       }
     }
-    
     if (isOverlayDesign) {
       switch(activeTab) {
-        case 'Home':
-          return (
-            <Home 
-              data={homeData}
-              styles={loadedTemplate.styles?.home}
-              isOverlayDesign={true}
-              accentColor={accentColor}
-              primaryColor={primaryColor}
-              descriptionColor={descriptionColor}
-              buttonBg={buttonBg}
-              navigate={navigate}
-            />
-          );
-        case 'About Us':
-          return (
-            <About 
-              data={aboutData}
-              styles={loadedTemplate.styles?.about}
-              isOverlayDesign={true}
-              accentColor={accentColor}
-              primaryColor={primaryColor}
-              textColor="#ffffff"
-              cardBg="rgba(255,255,255,0.1)"
-              cardBorder="rgba(255,255,255,0.2)"
-            />
-          );
-        case 'Courses':
-          return (
-            <Courses 
-              data={coursesData}
-              styles={loadedTemplate.styles?.courses}
-              isOverlayDesign={true}
-              accentColor={accentColor}
-              primaryColor={primaryColor}
-              textColor="#ffffff"
-              cardBg="rgba(255,255,255,0.1)"
-              cardBorder="rgba(255,255,255,0.2)"
-            />
-          );
-        case 'Achievements':
-          return (
-            <Achievements 
-              data={achievementsData}
-              styles={loadedTemplate.styles?.achievements}
-              isOverlayDesign={true}
-              accentColor={accentColor}
-              primaryColor={primaryColor}
-              textColor="#ffffff"
-              cardBg="rgba(255,255,255,0.1)"
-              cardBorder="rgba(255,255,255,0.2)"
-            />
-          );
-        case 'Contact':
-          return (
-            <Contact 
-              data={contactData}
-              styles={loadedTemplate.styles?.contact}
-              isOverlayDesign={true}
-              accentColor={accentColor}
-              primaryColor={primaryColor}
-              textColor="#ffffff"
-              cardBg="rgba(255,255,255,0.1)"
-              cardBorder="rgba(255,255,255,0.2)"
-            />
-          );
-        default:
-          return (
-            <Home 
-              data={homeData}
-              styles={loadedTemplate.styles?.home}
-              isOverlayDesign={true}
-              accentColor={accentColor}
-              primaryColor={primaryColor}
-              descriptionColor={descriptionColor}
-              buttonBg={buttonBg}
-              navigate={navigate}
-            />
-          );
+        case 'Home': return <Home data={homeData} styles={loadedTemplate.styles?.home} isOverlayDesign={true} accentColor={accentColor} primaryColor={primaryColor} descriptionColor={descriptionColor} buttonBg={buttonBg} navigate={navigate} />;
+        case 'About Us': return <About data={aboutData} styles={loadedTemplate.styles?.about} isOverlayDesign={true} accentColor={accentColor} primaryColor={primaryColor} textColor="#ffffff" cardBg="rgba(255,255,255,0.1)" cardBorder="rgba(255,255,255,0.2)" />;
+        case 'Courses': return <Courses data={coursesData} styles={loadedTemplate.styles?.courses} isOverlayDesign={true} accentColor={accentColor} primaryColor={primaryColor} textColor="#ffffff" cardBg="rgba(255,255,255,0.1)" cardBorder="rgba(255,255,255,0.2)" />;
+        case 'Achievements': return <Achievements data={achievementsData} styles={loadedTemplate.styles?.achievements} isOverlayDesign={true} accentColor={accentColor} primaryColor={primaryColor} textColor="#ffffff" cardBg="rgba(255,255,255,0.1)" cardBorder="rgba(255,255,255,0.2)" />;
+        case 'Contact': return <Contact data={contactData} styles={loadedTemplate.styles?.contact} isOverlayDesign={true} accentColor={accentColor} primaryColor={primaryColor} textColor="#ffffff" cardBg="rgba(255,255,255,0.1)" cardBorder="rgba(255,255,255,0.2)" />;
+        default: return <Home data={homeData} styles={loadedTemplate.styles?.home} isOverlayDesign={true} accentColor={accentColor} primaryColor={primaryColor} descriptionColor={descriptionColor} buttonBg={buttonBg} navigate={navigate} />;
       }
     }
-    
-    // EDUCATIONAL TEMPLATE
+    // Educational template
     switch(activeTab) {
-      case 'Home':
-        return (
-          <Home 
-            data={homeData}
-            styles={loadedTemplate.styles?.home}
-            isOverlayDesign={false}
-            primaryColor={primaryColor}
-            descriptionColor={descriptionColor}
-            buttonBg={buttonBg}
-            navigate={navigate}
-          />
-        );
-      case 'About Us':
-        return (
-          <About 
-            data={aboutData}
-            styles={loadedTemplate.styles?.about}
-            isOverlayDesign={false}
-            primaryColor={primaryColor}
-            textColor={textColor}
-            cardBg={cardBg}
-            cardBorder={cardBorder}
-          />
-        );
-      case 'Courses':
-        return (
-          <Courses 
-            data={coursesData}
-            styles={loadedTemplate.styles?.courses}
-            isOverlayDesign={false}
-            primaryColor={primaryColor}
-            textColor={textColor}
-            cardBg={cardBg}
-            cardBorder={cardBorder}
-          />
-        );
-      case 'Achievements':
-        return (
-          <Achievements 
-            data={achievementsData}
-            styles={loadedTemplate.styles?.achievements}
-            isOverlayDesign={false}
-            primaryColor={primaryColor}
-            textColor={textColor}
-            cardBg={cardBg}
-            cardBorder={cardBorder}
-          />
-        );
-      case 'Contact':
-        return (
-          <Contact 
-            data={contactData}
-            styles={loadedTemplate.styles?.contact}
-            isOverlayDesign={false}
-            primaryColor={primaryColor}
-            textColor={textColor}
-            cardBg={cardBg}
-            cardBorder={cardBorder}
-          />
-        );
-      default:
-        return (
-          <Home 
-            data={homeData}
-            styles={loadedTemplate.styles?.home}
-            isOverlayDesign={false}
-            primaryColor={primaryColor}
-            descriptionColor={descriptionColor}
-            buttonBg={buttonBg}
-            navigate={navigate}
-          />
-        );
+      case 'Home': return <Home data={homeData} styles={loadedTemplate.styles?.home} isOverlayDesign={false} primaryColor={primaryColor} descriptionColor={descriptionColor} buttonBg={buttonBg} navigate={navigate} />;
+      case 'About Us': return <About data={aboutData} styles={loadedTemplate.styles?.about} isOverlayDesign={false} primaryColor={primaryColor} textColor={textColor} cardBg={cardBg} cardBorder={cardBorder} />;
+      case 'Courses': return <Courses data={coursesData} styles={loadedTemplate.styles?.courses} isOverlayDesign={false} primaryColor={primaryColor} textColor={textColor} cardBg={cardBg} cardBorder={cardBorder} />;
+      case 'Achievements': return <Achievements data={achievementsData} styles={loadedTemplate.styles?.achievements} isOverlayDesign={false} primaryColor={primaryColor} textColor={textColor} cardBg={cardBg} cardBorder={cardBorder} />;
+      case 'Contact': return <Contact data={contactData} styles={loadedTemplate.styles?.contact} isOverlayDesign={false} primaryColor={primaryColor} textColor={textColor} cardBg={cardBg} cardBorder={cardBorder} />;
+      default: return <Home data={homeData} styles={loadedTemplate.styles?.home} isOverlayDesign={false} primaryColor={primaryColor} descriptionColor={descriptionColor} buttonBg={buttonBg} navigate={navigate} />;
     }
   };
 
-  // Loading state - shown when template is not yet loaded
+  // ==================== LOADING STATE ====================
   if (!loadedTemplate) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
-        <div className="text-center p-8">
-          <h1 className="text-2xl mb-4">Loading template...</h1>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-        </div>
-      </div>
-    );
+    return <div className="flex items-center justify-center h-screen bg-gray-900 text-white"><div className="text-center p-8"><h1 className="text-2xl mb-4">Loading template...</h1><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div></div></div>;
   }
 
+  // ==================== MAIN RENDER ====================
   return (
-    <div style={{
-      display: 'flex',
-      height: '100vh',
-      width: '100vw',
-      overflow: 'hidden',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-    }}>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', position: 'fixed', top: 0, left: 0 }}>
       <CustomizationPanel
         isOverlayDesign={isOverlayDesign}
-        customColors={{
-          accentColor,
-          overlayBg,
-          buttonBg,
-          cardBg,
-          cardBorder,
-          textColor,
-          descriptionColor,
-          logoColor,
-          menuColor,
-          menuHoverColor,
-          primaryColor,
-          headerBg,
-          footerBg
-        }}
+        customColors={{ accentColor, overlayBg, buttonBg, cardBg, cardBorder, textColor, descriptionColor, logoColor, menuColor, menuHoverColor, primaryColor, headerBg, footerBg }}
         onColorChange={handleColorChange}
         onReset={handleReset}
         templateData={loadedTemplate}
         onTextChange={handleTextChangeFromPanel}
         onExportJSON={handleGenerateJSON}
         user={user}
-        onExportAll={handleExportAllUserCustomizations}
         onResetToOriginal={handleResetToOriginal}
         isSaving={isSaving}
         hasUnsavedChanges={hasUnsavedChanges}
         lastSaved={lastSaved}
       />
 
-      <div
-        ref={previewRef}
-        style={{
-          flex: 1,
-          height: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          contain: 'layout',
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
+      <div ref={previewRef} style={{ flex: 1, height: '100vh', display: 'flex', flexDirection: 'column', contain: 'layout', overflow: 'hidden', position: 'relative' }}>
         {isShoppingCart && (
           <>
-            <div style={{
-              position: 'fixed', inset: 0,
-              backgroundImage: "url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1920')",
-              backgroundSize: 'cover', backgroundPosition: 'center',
-              zIndex: 0,
-            }} />
-            <div style={{
-              position: 'fixed', inset: 0,
-              backgroundColor: 'rgba(0,0,0,0.7)',
-              zIndex: 1,
-            }} />
+            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1920')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1 }} />
           </>
         )}
-
         {isOverlayDesign && (
           <>
-            <div style={{
-              position: 'absolute', inset: 0,
-              backgroundImage: `url(${homeData?.image || loadedTemplate.home?.image})`,
-              backgroundSize: 'cover', backgroundPosition: 'center',
-              zIndex: 0, pointerEvents: 'none',
-            }} />
-            <div style={{
-              position: 'absolute', inset: 0,
-              backgroundColor: overlayBg,
-              zIndex: 1, pointerEvents: 'none',
-            }} />
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${homeData?.image || loadedTemplate.home?.image})`, backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0, pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: 0, backgroundColor: overlayBg, zIndex: 1, pointerEvents: 'none' }} />
           </>
         )}
-
-        <div style={{
-          flexShrink: 0,
-          width: '100%',
-          position: 'relative',
-          zIndex: 100,
-        }}>
+        <div style={{ flexShrink: 0, width: '100%', position: 'relative', zIndex: 100 }}>
           <Navbar
             navData={navigationData}
             themesData={loadedTemplate.themes || []}
@@ -978,38 +607,13 @@ export default function CustomizedParent() {
             setSearch={setSearch}
           />
         </div>
-
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          position: 'relative',
-          zIndex: 2,
-        }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', zIndex: 2 }}>
           <div className={`min-h-full flex flex-col ${!isOverlayDesign && !isShoppingCart ? 'bg-white' : ''}`}>
-            <main className={`flex-grow w-full mx-auto px-4 sm:px-6 lg:px-8 ${
-              isOverlayDesign ? 'relative z-20 max-w-7xl pt-8' : 
-              isShoppingCart ? 'relative z-20 max-w-6xl pt-28 md:pt-32' : 
-              'max-w-6xl pt-8'
-            }`}>
-              <div key={activeTab} className="w-full">
-                {renderContent()}
-              </div>
+            <main className={`flex-grow w-full mx-auto px-4 sm:px-6 lg:px-8 ${isOverlayDesign ? 'relative z-20 max-w-7xl pt-8' : isShoppingCart ? 'relative z-20 max-w-6xl pt-28 md:pt-32' : 'max-w-6xl pt-8'}`}>
+              <div key={activeTab} className="w-full">{renderContent()}</div>
             </main>
-
-            <footer
-              className="w-full py-6 mt-auto transition-all duration-300"
-              style={{
-                backgroundColor: isOverlayDesign ? 'rgba(0,0,0,0.8)' : 
-                               isShoppingCart ? 'transparent' : footerBg,
-                borderTop: (isOverlayDesign || isShoppingCart) ? '1px solid rgba(255,255,255,0.1)' : 'none',
-                position: 'relative',
-                zIndex: 2,
-              }}
-            >
-              <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs tracking-wide ${
-                (isOverlayDesign || isShoppingCart) ? 'text-white/40' : 'text-white/70'
-              }`}>
+            <footer className="w-full py-6 mt-auto transition-all duration-300" style={{ backgroundColor: isOverlayDesign ? 'rgba(0,0,0,0.8)' : isShoppingCart ? 'transparent' : footerBg, borderTop: (isOverlayDesign || isShoppingCart) ? '1px solid rgba(255,255,255,0.1)' : 'none', position: 'relative', zIndex: 2 }}>
+              <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs tracking-wide ${(isOverlayDesign || isShoppingCart) ? 'text-white/40' : 'text-white/70'}`}>
                 © {new Date().getFullYear()} {loadedTemplate.title}. All rights reserved.
               </div>
             </footer>

@@ -1,4 +1,3 @@
-// src/components/CustomizationPanel.jsx
 import { useState, useEffect } from "react";
 import ColorPickerRow from "./ColorPickerRow";
 import "../../assets/css/CustomizationPanel.css";
@@ -18,6 +17,7 @@ const CustomizationPanel = ({
   isSaving,
   hasUnsavedChanges,
   lastSaved,
+  onLoadFromFolder,   // <-- new prop
 }) => {
   const [activeMainTab, setActiveMainTab] = useState("colors");
   const [activeColorSubTab, setActiveColorSubTab] = useState("theme");
@@ -491,61 +491,55 @@ const CustomizationPanel = ({
 
         {/* Action Buttons */}
         <div className="button-group">
+           <div className="button-group">
+          <button onClick={onReset} className="reset-button">Reset Current Tab</button>
+          {onResetToOriginal && <button onClick={onResetToOriginal} className="reset-original-button">Reset to Original Template</button>}
+          <button onClick={onExportJSON} className="export-button">Save</button>
+        </div>
           <button onClick={onReset} className="reset-button">
-
-              <DynamicIcon
+            <DynamicIcon
               name="FaArrowsRotate"
               size={17}
-              style={{
-                color: "white",
-                marginRight: "5px",
-              }}
+              style={{ color: "white", marginRight: "5px" }}
             />
-
             Reset Current Tab
           </button>
           {onResetToOriginal && (
-            <button
-              onClick={onResetToOriginal}
-              className="reset-original-button"
-            >
+            <button onClick={onResetToOriginal} className="reset-original-button">
               <DynamicIcon
-              name="FaArrowsRotate"
-              size={17}
-              style={{
-                color: "white",
-                marginRight: "5px",
-              }}
-            />
-                
-              
+                name="FaArrowsRotate"
+                size={17}
+                style={{ color: "white", marginRight: "5px" }}
+              />
               Reset to Original Template
             </button>
           )}
           <button onClick={onExportJSON} className="export-button">
-
             <DynamicIcon
               name="IoIosSave"
               size={19}
-              style={{
-                color: "white",
-                marginRight: "5px",
-              }}
+              style={{ color: "white", marginRight: "5px" }}
             />
-            Save 
+            Save
           </button>
           {user && onExportAll && (
             <button onClick={onExportAll} className="export-all-button">
               <DynamicIcon
                 name="IoIosSave"
                 size={19}
-                style={{
-                  color: "white",
-                  marginRight: "5px",
-                }}
+                style={{ color: "white", marginRight: "5px" }}
               />
-
-              Save All 
+              Save All
+            </button>
+          )}
+          {user && onLoadFromFolder && (
+            <button onClick={onLoadFromFolder} className="load-folder-button">
+              <DynamicIcon
+                name="FaFolderOpen"
+                size={19}
+                style={{ color: "white", marginRight: "5px" }}
+              />
+              Load from Folder
             </button>
           )}
         </div>
@@ -567,7 +561,6 @@ const CustomizationPanel = ({
               style={{ color: "currentColor" }}
             />
             Colors
-
           </button>
           <button
             onClick={() => setActiveMainTab("text")}
@@ -729,7 +722,8 @@ const CustomizationPanel = ({
                   name="IoIosColorPalette"
                   size={25}
                   style={{ color: "#252424" }}
-                /> Theme Colors</h3>
+                /> Theme Colors
+              </h3>
               <ColorPickerRow
                 label="Accent Color"
                 color={customColors.accentColor}
@@ -783,7 +777,8 @@ const CustomizationPanel = ({
                   name="IoIosColorPalette"
                   size={25}
                   style={{ color: "#252424" }}
-                /> Brand Colors</h3>
+                /> Brand Colors
+              </h3>
               <ColorPickerRow
                 label="Primary Color"
                 color={customColors.primaryColor}
@@ -1176,7 +1171,8 @@ const CustomizationPanel = ({
                       name="FiMapPin"
                       size={18}
                       style={{ color: "#000000" }}
-                    /> Navigation Menu</h3>
+                    /> Navigation Menu
+                  </h3>
                   <button
                     onClick={handleAddNavItem}
                     className="px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition"
@@ -1333,7 +1329,6 @@ const CustomizationPanel = ({
                   <div className="mt-4 p-4 bg-gray-50 rounded-xl">
                     <h4 className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-2">
                       <span>
-
                         <DynamicIcon
                           name="FiEye"
                           size={18}
@@ -1374,15 +1369,13 @@ const CustomizationPanel = ({
               {/* Home Section */}
               <div className="section">
                 <h3 className="section-title">
-
                   <DynamicIcon
                     name="FiHome"
                     size={20}
                     style={{ color: "#000000" }}
                   />
-
-
-                  Home Section</h3>
+                  Home Section
+                </h3>
                 <div className="form-group">
                   <label className="form-label">Tagline / Title</label>
                   <input
@@ -1468,14 +1461,13 @@ const CustomizationPanel = ({
               {/* About Section */}
               <div className="section">
                 <h3 className="section-title">
-
                   <DynamicIcon
                     name="FaBookOpen"
                     size={20}
                     style={{ color: "#000000" }}
                   />
-
-                  About Section</h3>
+                  About Section
+                </h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
                   <input
@@ -1536,14 +1528,13 @@ const CustomizationPanel = ({
               {/* Courses Section */}
               <div className="section">
                 <h3 className="section-title">
-
                   <DynamicIcon
                     name="FaGraduationCap"
                     size={23}
                     style={{ color: "#000000" }}
                   />
-
-                  Courses Section</h3>
+                  Courses Section
+                </h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
                   <input
@@ -1608,7 +1599,8 @@ const CustomizationPanel = ({
                     name="IoIosTrophy"
                     size={23}
                     style={{ color: "#000000" }}
-                  /> Achievements Section</h3>
+                  /> Achievements Section
+                </h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
                   <input
@@ -1644,8 +1636,8 @@ const CustomizationPanel = ({
                     name="FiPhone"
                     size={23}
                     style={{ color: "#000000" }}
-
-                  /> Contact Section</h3>
+                  /> Contact Section
+                </h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
                   <input
