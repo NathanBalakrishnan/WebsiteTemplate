@@ -124,39 +124,72 @@ export default function CustomizedParent() {
   }, [cart, selectedTemplateId, userId, loadedTemplate]);
 
   // ==================== AUTO-SAVE (folder + localStorage) ====================
-  useEffect(() => {
-    if (!loadedTemplate || !userId || !hasUnsavedChanges) return;
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    setIsSaving(true);
+  // useEffect(() => {
+  //   if (!loadedTemplate || !userId || !hasUnsavedChanges) return;
+  //   if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+  //   setIsSaving(true);
 
-    saveTimeoutRef.current = setTimeout(async () => {
-      const customized = buildCustomizedTemplate();
-      if (!customized) return;
+  //   saveTimeoutRef.current = setTimeout(async () => {
+  //     const customized = buildCustomizedTemplate();
+  //     if (!customized) return;
 
-      // 1. Save to localStorage (quick fallback)
+  //     // 1. Save to localStorage (quick fallback)
+  //     saveUserCustomizedTemplate(userId, selectedTemplateId, customized);
+
+  //     // 2. Save to folder (cross‑browser sync)
+  //     try {
+  //       const dirHandle = await getFolderHandle();
+  //       const fileName = `template_${selectedTemplateId}_user_${userId}.json`;
+  //       const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+  //       const writable = await fileHandle.createWritable();
+  //       await writable.write(JSON.stringify(customized, null, 2));
+  //       await writable.close();
+  //       setLastSaved(new Date());
+  //       setHasUnsavedChanges(false);
+  //     } catch (err) {
+  //       console.warn('Folder save failed – maybe permission lost?', err);
+  //       setLastSaved(new Date());
+  //       setHasUnsavedChanges(false);
+  //     }
+  //     setIsSaving(false);
+  //   }, 1500);
+
+  //   return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
+  // }, [theme, customColors, textOverrides, userId, selectedTemplateId, loadedTemplate, hasUnsavedChanges]);
+// ==================== AUTO-SAVE (localStorage only – no file write, no refresh) ====================
+useEffect(() => {
+  if (!loadedTemplate || !userId || !hasUnsavedChanges) return;
+  if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+  setIsSaving(true);
+
+  saveTimeoutRef.current = setTimeout(() => {
+    const customized = buildCustomizedTemplate();
+    if (customized) {
       saveUserCustomizedTemplate(userId, selectedTemplateId, customized);
+      setLastSaved(new Date());
+      setHasUnsavedChanges(false);
+    }
+    setIsSaving(false);
+  }, 1500);
 
-      // 2. Save to folder (cross‑browser sync)
-      try {
-        const dirHandle = await getFolderHandle();
-        const fileName = `template_${selectedTemplateId}_user_${userId}.json`;
-        const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
-        const writable = await fileHandle.createWritable();
-        await writable.write(JSON.stringify(customized, null, 2));
-        await writable.close();
-        setLastSaved(new Date());
-        setHasUnsavedChanges(false);
-      } catch (err) {
-        console.warn('Folder save failed – maybe permission lost?', err);
-        setLastSaved(new Date());
-        setHasUnsavedChanges(false);
-      }
-      setIsSaving(false);
-    }, 1500);
-
-    return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
-  }, [theme, customColors, textOverrides, userId, selectedTemplateId, loadedTemplate, hasUnsavedChanges]);
-
+  return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
+}, [theme, customColors, textOverrides, userId, selectedTemplateId, loadedTemplate, hasUnsavedChanges]);
+// ==================== MANUAL SAVE TO FOLDER (cross‑browser sync) ====================
+const handleSaveToFolder = async () => {
+  const customized = buildCustomizedTemplate();
+  if (!customized) return;
+  try {
+    const dirHandle = await getFolderHandle();
+    const fileName = `template_${selectedTemplateId}_user_${userId}.json`;
+    const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(customized, null, 2));
+    await writable.close();
+    alert('✅ Saved to folder. Other browsers can now load this template.');
+  } catch (err) {
+    alert('Failed to save to folder. Please select a folder.');
+  }
+};
   const markAsChanged = () => { if (!hasUnsavedChanges) setHasUnsavedChanges(true); };
 
   // ==================== CART FUNCTIONS ====================
@@ -572,6 +605,7 @@ export default function CustomizedParent() {
         isSaving={isSaving}
         hasUnsavedChanges={hasUnsavedChanges}
         lastSaved={lastSaved}
+        onSaveToFolder={handleSaveToFolder}
       />
 
       <div ref={previewRef} style={{ flex: 1, height: '100vh', display: 'flex', flexDirection: 'column', contain: 'layout', overflow: 'hidden', position: 'relative' }}>

@@ -16,6 +16,7 @@ const CustomizationPanel = ({
   onResetToOriginal,
   isSaving,
   hasUnsavedChanges,
+  onSaveToFolder,
   lastSaved,
   onLoadFromFolder,   // <-- new prop
 }) => {
@@ -85,7 +86,10 @@ const CustomizationPanel = ({
     categories: [],
     products: [],
   });
-
+const handleSaveToFolderClick = (e) => {
+  e.preventDefault();
+  if (onSaveToFolder) onSaveToFolder();
+};
   // Load data based on template type
   useEffect(() => {
     if (templateData) {
@@ -490,59 +494,40 @@ const CustomizationPanel = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="button-group">
-           {/* <div className="button-group">
-          <button onClick={onReset} className="reset-button">Reset Current Tab</button>
-          {onResetToOriginal && <button onClick={onResetToOriginal} className="reset-original-button">Reset to Original Template</button>}
-          <button onClick={onExportJSON} className="export-button">Save</button>
-        </div> */}
-          <button onClick={onReset} className="reset-button">
-            <DynamicIcon
-              name="FaArrowsRotate"
-              size={17}
-              style={{ color: "white", marginRight: "5px" }}
-            />
-            Reset Current Tab
-          </button>
-          {onResetToOriginal && (
-            <button onClick={onResetToOriginal} className="reset-original-button">
-              <DynamicIcon
-                name="FaArrowsRotate"
-                size={17}
-                style={{ color: "white", marginRight: "5px" }}
-              />
-              Reset to Original Template
-            </button>
-          )}
-          <button onClick={onExportJSON} className="export-button">
-            <DynamicIcon
-              name="IoIosSave"
-              size={19}
-              style={{ color: "white", marginRight: "5px" }}
-            />
-            Save
-          </button>
-          {user && onExportAll && (
-            <button onClick={onExportAll} className="export-all-button">
-              <DynamicIcon
-                name="IoIosSave"
-                size={19}
-                style={{ color: "white", marginRight: "5px" }}
-              />
-              Save All
-            </button>
-          )}
-          {user && onLoadFromFolder && (
-            <button onClick={onLoadFromFolder} className="load-folder-button">
-              <DynamicIcon
-                name="FaFolderOpen"
-                size={19}
-                style={{ color: "white", marginRight: "5px" }}
-              />
-              Load from Folder
-            </button>
-          )}
-        </div>
+       <div className="button-group">
+  <button onClick={onReset} className="reset-button">
+    <DynamicIcon name="FaArrowsRotate" size={17} style={{ color: "white", marginRight: "5px" }} />
+    Reset Current Tab
+  </button>
+  {onResetToOriginal && (
+    <button onClick={onResetToOriginal} className="reset-original-button">
+      <DynamicIcon name="FaArrowsRotate" size={17} style={{ color: "white", marginRight: "5px" }} />
+      Reset to Original Template
+    </button>
+  )}
+  <button onClick={onExportJSON} className="export-button">
+    <DynamicIcon name="IoIosSave" size={19} style={{ color: "white", marginRight: "5px" }} />
+    Save
+  </button>
+  {user && onExportAll && (
+    <button onClick={onExportAll} className="export-all-button">
+      <DynamicIcon name="IoIosSave" size={19} style={{ color: "white", marginRight: "5px" }} />
+      Save All
+    </button>
+  )}
+  {user && onLoadFromFolder && (
+    <button onClick={onLoadFromFolder} className="load-folder-button text-black">
+      <DynamicIcon name="FaFolderOpen" size={19} style={{ color: "white", marginRight: "5px" }} />
+      Load from Folder
+    </button>
+  )}
+  {user && onSaveToFolder && (
+    <button onClick={handleSaveToFolderClick} className="save-folder-button text-black">
+      <DynamicIcon name="IoIosSave" size={19} style={{ color: "white", marginRight: "5px" }} />
+      Save to Folder (Sync)
+    </button>
+  )}
+</div>
 
         <div className="main-tabs">
           <button
