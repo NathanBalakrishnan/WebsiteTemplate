@@ -491,11 +491,11 @@ const CustomizationPanel = ({
 
         {/* Action Buttons */}
         <div className="button-group">
-           <div className="button-group">
+           {/* <div className="button-group">
           <button onClick={onReset} className="reset-button">Reset Current Tab</button>
           {onResetToOriginal && <button onClick={onResetToOriginal} className="reset-original-button">Reset to Original Template</button>}
           <button onClick={onExportJSON} className="export-button">Save</button>
-        </div>
+        </div> */}
           <button onClick={onReset} className="reset-button">
             <DynamicIcon
               name="FaArrowsRotate"
@@ -780,9 +780,9 @@ const CustomizationPanel = ({
                 /> Brand Colors
               </h3>
               <ColorPickerRow
-                label="Primary Color"
-                color={customColors.primaryColor}
-                onChange={(e) => onColorChange("primaryColor", e.target.value)}
+                label="Button Background"
+  color={customColors.buttonBg}
+  onChange={(e) => onColorChange("buttonBg", e.target.value)}
               />
               <ColorPickerRow
                 label="Button Background"

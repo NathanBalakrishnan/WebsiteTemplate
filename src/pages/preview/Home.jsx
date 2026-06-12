@@ -1,8 +1,8 @@
 // src/pages/preview/Home.jsx
 import { useNavigate } from "react-router-dom";
 import ProductCard from "../../components/common/ProductCard";
-import { FiShoppingBag, FiUsers, FiMapPin } from "react-icons/fi";
 import DynamicIcon from "../../components/common/DynamicIcon";
+
 export default function Home({
   data,
   styles,
@@ -22,9 +22,8 @@ export default function Home({
     const products = data?.products || [];
     const categories = data?.categories || [];
     const stats = data?.stats || { products: 0, customers: 0, stores: 0 };
-    const icons = data?.icons
+    const icons = data?.icons;
     const shoppingContent = data?.shoppingContent || {};
-    console.log("stats",icons.productIcon)
     const filteredProducts = products.filter((product) => {
       if (!product) return false;
       const matchesSearch = product.name
@@ -61,15 +60,11 @@ export default function Home({
           </div>
         </div>
 
-        {/* Stats Section - Text color applied */}
+        {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl">
-            {/* <FiShoppingBag
-              className="text-3xl mx-auto mb-3"
-              style={{ color: "var(--accent-color)" }}
-            /> */}
             <DynamicIcon
-              name={icons?.productIcon}// Pass the icon name as a string
+              name={icons?.productIcon}
               size={28}
               className="mx-auto mb-3"
               style={{ color: accentColor }}
@@ -78,15 +73,15 @@ export default function Home({
               className="text-3xl font-bold"
               style={{ color: "var(--text-color)" }}
             >
-              {stats.products?.toLocaleString() || 0}+ 
+              {stats.products?.toLocaleString() || 0}+
             </div>
             <div className="text-white/60 text-sm">
               {shoppingContent.stat1Label || "PRODUCTS"}
             </div>
           </div>
           <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl">
-             <DynamicIcon
-              name={icons?.customerIcon}// Pass the icon name as a string
+            <DynamicIcon
+              name={icons?.customerIcon}
               size={28}
               className="mx-auto mb-3"
               style={{ color: accentColor }}
@@ -102,8 +97,8 @@ export default function Home({
             </div>
           </div>
           <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl">
-             <DynamicIcon
-              name={icons?.storeIcon}// Pass the icon name as a string
+            <DynamicIcon
+              name={icons?.storeIcon}
               size={28}
               className="mx-auto mb-3"
               style={{ color: accentColor }}
@@ -225,7 +220,7 @@ export default function Home({
     );
   }
 
-  // TEMPLATE 2: OVERLAY DESIGN (full-page)
+  // TEMPLATE 2: OVERLAY DESIGN (full-page) – with responsive top spacing
   if (isOverlayDesign) {
     const defaultImage =
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80";
@@ -233,42 +228,50 @@ export default function Home({
       data?.image && data.image.trim() !== "" ? data.image : defaultImage;
 
     return (
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-        <div className="flex-1 text-center lg:text-left">
-          <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-white leading-tight">
-            {data?.tagline}
-          </h1>
-          <p className="text-lg text-white/70 mb-8 leading-relaxed">
-            {data?.description}
-          </p>
-          <div className="flex gap-4 justify-center lg:justify-start">
-            {data?.primaryCta && (
-              <button
-                className="px-8 py-3 rounded-lg hover:opacity-90 transition-all font-medium cursor-pointer"
-                style={{
-                  backgroundColor: "var(--accent-color)",
-                  color: "white",
-                }}
-              >
-                {data.primaryCta}
-              </button>
-            )}
-            {data?.secondaryCta && (
-              <button className="px-8 py-3 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium cursor-pointer">
-                {data.secondaryCta}
-              </button>
-            )}
+      <div className="mt-16 lg:mt-12 md:mt-16">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+          <div className="flex-1 text-center lg:text-left">
+            <h1
+              className="text-5xl lg:text-6xl font-bold mb-6 leading-tight"
+              style={{ color: accentColor || primaryColor || "#1e3a8a" }}
+            >
+              {data?.tagline}
+            </h1>
+            <p
+              className="text-lg mb-8 leading-relaxed"
+              style={{ color: descriptionColor || "#d1d5db" }}
+            >
+              {data?.description}
+            </p>
+            <div className="flex gap-4 justify-center lg:justify-start">
+              {data?.primaryCta && (
+                <button
+                  className="px-8 py-3 rounded-lg hover:opacity-90 transition-all font-medium cursor-pointer"
+                  style={{
+                    backgroundColor: buttonBg || primaryColor || "#1e3a8a",
+                    color: "white",
+                  }}
+                >
+                  {data.primaryCta}
+                </button>
+              )}
+              {data?.secondaryCta && (
+                <button className="px-8 py-3 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium cursor-pointer">
+                  {data.secondaryCta}
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="flex-1">
-          <img
-            src={heroImage}
-            alt="Hero"
-            className="w-full rounded-2xl shadow-2xl border-2 border-white/20 hover:border-white/40 hover:scale-105 transition-all duration-300 hover:rotate-2 cursor-pointer"
-            onError={(e) => {
-              e.target.src = defaultImage;
-            }}
-          />
+          <div className="flex-1">
+            <img
+              src={heroImage}
+              alt="Hero"
+              className="w-full rounded-2xl shadow-2xl border-2 border-white/20 hover:border-white/40 hover:scale-105 transition-all duration-300 hover:rotate-2 cursor-pointer"
+              onError={(e) => {
+                e.target.src = defaultImage;
+              }}
+            />
+          </div>
         </div>
       </div>
     );

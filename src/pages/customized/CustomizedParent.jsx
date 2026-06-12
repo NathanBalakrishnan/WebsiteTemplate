@@ -220,6 +220,7 @@ export default function CustomizedParent() {
 
   const applyColorVariables = (colors) => {
     document.documentElement.style.setProperty('--accent-color', colors.accentColor || '#14b8a6');
+   
     document.documentElement.style.setProperty('--button-bg', colors.buttonBg || '#14b8a6');
     document.documentElement.style.setProperty('--text-color', colors.textColor || '#1f2937');
     document.documentElement.style.setProperty('--card-bg', colors.cardBg || 'rgba(255,255,255,0.1)');
@@ -281,6 +282,7 @@ export default function CustomizedParent() {
 
   useEffect(() => {
     document.documentElement.style.setProperty('--accent-color', accentColor);
+
     document.documentElement.style.setProperty('--button-bg', buttonBg);
     document.documentElement.style.setProperty('--text-color', textColor);
     document.documentElement.style.setProperty('--card-bg', cardBg);
