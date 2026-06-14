@@ -522,7 +522,7 @@ const handleSaveToFolderClick = (e) => {
     </button>
   )}
   {user && onSaveToFolder && (
-    <button onClick={handleSaveToFolderClick} className="save-folder-button text-black">
+    <button onClick={handleSaveToFolderClick} className="export-all-button text-black">
       <DynamicIcon name="IoIosSave" size={19} style={{ color: "white", marginRight: "5px" }} />
       Save to Folder (Sync)
     </button>
