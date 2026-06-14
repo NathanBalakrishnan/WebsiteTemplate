@@ -18,7 +18,8 @@ const CustomizationPanel = ({
   hasUnsavedChanges,
   onSaveToFolder,
   lastSaved,
-  onLoadFromFolder,   // <-- new prop
+  onLoadFromFolder, // <-- new prop
+  onHandlePreview,
 }) => {
   const [activeMainTab, setActiveMainTab] = useState("colors");
   const [activeColorSubTab, setActiveColorSubTab] = useState("theme");
@@ -86,10 +87,10 @@ const CustomizationPanel = ({
     categories: [],
     products: [],
   });
-const handleSaveToFolderClick = (e) => {
-  e.preventDefault();
-  if (onSaveToFolder) onSaveToFolder();
-};
+  const handleSaveToFolderClick = (e) => {
+    e.preventDefault();
+    if (onSaveToFolder) onSaveToFolder();
+  };
   // Load data based on template type
   useEffect(() => {
     if (templateData) {
@@ -470,7 +471,12 @@ const handleSaveToFolderClick = (e) => {
       <div className="panel-header">
         <h1
           className="panel-title"
-          style={{ display: "flex", alignItems: "center", gap: "10px", fontSize:"40px" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            fontSize: "40px",
+          }}
         >
           <span>Customize Your Template</span>
         </h1>
@@ -494,40 +500,85 @@ const handleSaveToFolderClick = (e) => {
         </div>
 
         {/* Action Buttons */}
-       <div className="button-group">
-  <button onClick={onReset} className="reset-button">
-    <DynamicIcon name="FaArrowsRotate" size={17} style={{ color: "white", marginRight: "5px" }} />
-    Reset Current Tab
-  </button>
-  {onResetToOriginal && (
-    <button onClick={onResetToOriginal} className="reset-original-button">
-      <DynamicIcon name="FaArrowsRotate" size={17} style={{ color: "white", marginRight: "5px" }} />
-      Reset to Original Template
-    </button>
-  )}
-  <button onClick={onExportJSON} className="export-button">
-    <DynamicIcon name="IoIosSave" size={19} style={{ color: "white", marginRight: "5px" }} />
-    Save
-  </button>
-  {user && onExportAll && (
-    <button onClick={onExportAll} className="export-all-button">
-      <DynamicIcon name="IoIosSave" size={19} style={{ color: "white", marginRight: "5px" }} />
-      Save All
-    </button>
-  )}
-  {user && onLoadFromFolder && (
-    <button onClick={onLoadFromFolder} className="load-folder-button text-black">
-      <DynamicIcon name="FaFolderOpen" size={19} style={{ color: "white", marginRight: "5px" }} />
-      Load from Folder
-    </button>
-  )}
-  {user && onSaveToFolder && (
-    <button onClick={handleSaveToFolderClick} className="export-all-button text-black">
-      <DynamicIcon name="IoIosSave" size={19} style={{ color: "white", marginRight: "5px" }} />
-      Save to Folder (Sync)
-    </button>
-  )}
-</div>
+        <div className="button-group">
+          <button onClick={onReset} className="reset-button">
+            <DynamicIcon
+              name="FaArrowsRotate"
+              size={17}
+              style={{ color: "white", marginRight: "5px" }}
+            />
+            Reset Current Tab
+          </button>
+          {onResetToOriginal && (
+            <button
+              onClick={onResetToOriginal}
+              className="reset-original-button"
+            >
+              <DynamicIcon
+                name="FaArrowsRotate"
+                size={17}
+                style={{ color: "white", marginRight: "5px" }}
+              />
+              Reset to Original Template
+            </button>
+          )}
+          <button onClick={onExportJSON} className="export-button">
+            <DynamicIcon
+              name="IoIosSave"
+              size={19}
+              style={{ color: "white", marginRight: "5px" }}
+            />
+            Save
+          </button>
+          {user && onExportAll && (
+            <button onClick={onExportAll} className="export-all-button">
+              <DynamicIcon
+                name="IoIosSave"
+                size={19}
+                style={{ color: "white", marginRight: "5px" }}
+              />
+              Save All
+            </button>
+          )}
+          {user && onLoadFromFolder && (
+            <button
+              onClick={onLoadFromFolder}
+              className="load-folder-button text-black"
+            >
+              <DynamicIcon
+                name="FaFolderOpen"
+                size={19}
+                style={{ color: "white", marginRight: "5px" }}
+              />
+              Load from Folder
+            </button>
+          )}
+          {user && onSaveToFolder && (
+            <button
+              onClick={handleSaveToFolderClick}
+              className="export-all-button text-black"
+            >
+              <DynamicIcon
+                name="IoIosSave"
+                size={19}
+                style={{ color: "white", marginRight: "5px" }}
+              />
+              Save to Folder (Sync)
+            </button>
+          )}
+
+          <button
+            onClick={onHandlePreview}
+            className="export-all-button text-black"
+          >
+            <DynamicIcon
+              name="IoIosSave"
+              size={19}
+              style={{ color: "white", marginRight: "5px" }}
+            />
+            Preview After Customization
+          </button>
+        </div>
 
         <div className="main-tabs">
           <button
@@ -707,7 +758,8 @@ const handleSaveToFolderClick = (e) => {
                   name="IoIosColorPalette"
                   size={25}
                   style={{ color: "#252424" }}
-                /> Theme Colors
+                />{" "}
+                Theme Colors
               </h3>
               <ColorPickerRow
                 label="Accent Color"
@@ -762,12 +814,13 @@ const handleSaveToFolderClick = (e) => {
                   name="IoIosColorPalette"
                   size={25}
                   style={{ color: "#252424" }}
-                /> Brand Colors
+                />{" "}
+                Brand Colors
               </h3>
               <ColorPickerRow
                 label="Button Background"
-  color={customColors.buttonBg}
-  onChange={(e) => onColorChange("buttonBg", e.target.value)}
+                color={customColors.buttonBg}
+                onChange={(e) => onColorChange("buttonBg", e.target.value)}
               />
               <ColorPickerRow
                 label="Button Background"
@@ -1156,7 +1209,8 @@ const handleSaveToFolderClick = (e) => {
                       name="FiMapPin"
                       size={18}
                       style={{ color: "#000000" }}
-                    /> Navigation Menu
+                    />{" "}
+                    Navigation Menu
                   </h3>
                   <button
                     onClick={handleAddNavItem}
@@ -1319,7 +1373,8 @@ const handleSaveToFolderClick = (e) => {
                           size={18}
                           style={{ color: "#000000" }}
                         />
-                      </span> Live Preview
+                      </span>{" "}
+                      Live Preview
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {textContent.navigationItems.map((item, idx) => (
@@ -1584,7 +1639,8 @@ const handleSaveToFolderClick = (e) => {
                     name="IoIosTrophy"
                     size={23}
                     style={{ color: "#000000" }}
-                  /> Achievements Section
+                  />{" "}
+                  Achievements Section
                 </h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
@@ -1621,7 +1677,8 @@ const handleSaveToFolderClick = (e) => {
                     name="FiPhone"
                     size={23}
                     style={{ color: "#000000" }}
-                  /> Contact Section
+                  />{" "}
+                  Contact Section
                 </h3>
                 <div className="form-group">
                   <label className="form-label">Section Title</label>
