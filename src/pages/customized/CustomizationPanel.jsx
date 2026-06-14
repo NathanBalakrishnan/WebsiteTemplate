@@ -18,11 +18,12 @@ const CustomizationPanel = ({
   hasUnsavedChanges,
   lastSaved,
   onLoadFromFolder,   // <-- new prop
+  onHandlePreview
 }) => {
   const [activeMainTab, setActiveMainTab] = useState("colors");
   const [activeColorSubTab, setActiveColorSubTab] = useState("theme");
   const [activeTemplate1SubTab, setActiveTemplate1SubTab] = useState("brand");
-
+  const [viewPreview,setviewPreview]= useState(false);
   const isShoppingCart = templateData?.themeScope === "shopping-cart";
 
   // Local state for text opacity
@@ -42,7 +43,6 @@ const CustomizationPanel = ({
     }
     return 0.1;
   });
-
   // Local state for text content - For all templates
   const [textContent, setTextContent] = useState({
     // Template 1 & 2 content
@@ -521,6 +521,14 @@ const CustomizationPanel = ({
               style={{ color: "white", marginRight: "5px" }}
             />
             Save
+          </button>
+          <button onClick={onHandlePreview} className="export-button">
+            <DynamicIcon
+              name="IoIosSave"
+              size={19}
+              style={{ color: "white", marginRight: "5px" }}
+            />
+            Preview Your Customization
           </button>
           {user && onExportAll && (
             <button onClick={onExportAll} className="export-all-button">

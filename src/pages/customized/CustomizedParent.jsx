@@ -25,6 +25,7 @@ export default function CustomizedParent() {
   const [theme, setTheme] = useState('classic');
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState('');
+  const [viewFullScreen, setViewFullScreen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const [customColors, setCustomColors] = useState({
@@ -73,13 +74,12 @@ export default function CustomizedParent() {
       folderHandleCache = savedHandle;
       return folderHandleCache;
     }
-    // Ask user to pick a folder (only once per browser)
     folderHandleCache = await window.showDirectoryPicker();
     await db.put(STORE_NAME, folderHandleCache, 'dirHandle');
     return folderHandleCache;
   }
 
-  // ==================== LOAD TEMPLATE (folder first, then localStorage) ====================
+  // ==================== LOAD TEMPLATE ====================
   useEffect(() => {
     const loadTemplate = async () => {
       if (!originalTemplate || !userId) return;
@@ -92,11 +92,10 @@ export default function CustomizedParent() {
         const file = await fileHandle.getFile();
         const text = await file.text();
         folderData = JSON.parse(text);
-      } catch (err) { /* file not found – ignore */ }
+      } catch (err) { /* ignore */ }
 
       if (folderData) {
         setLoadedTemplate(folderData);
-        // sync to localStorage as fallback
         saveUserCustomizedTemplate(userId, selectedTemplateId, folderData);
       } else {
         const localData = loadUserCustomizedTemplate(userId, selectedTemplateId, originalTemplate);
@@ -106,7 +105,6 @@ export default function CustomizedParent() {
     loadTemplate();
   }, [originalTemplate, userId, selectedTemplateId]);
 
-  // Initialize theme from loaded template
   useEffect(() => {
     if (loadedTemplate?.themes?.[0]) setTheme(loadedTemplate.themes[0].id);
   }, [loadedTemplate]);
@@ -123,7 +121,7 @@ export default function CustomizedParent() {
     }
   }, [cart, selectedTemplateId, userId, loadedTemplate]);
 
-  // ==================== AUTO-SAVE (folder + localStorage) ====================
+  // ==================== AUTO-SAVE ====================
   useEffect(() => {
     if (!loadedTemplate || !userId || !hasUnsavedChanges) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -133,10 +131,8 @@ export default function CustomizedParent() {
       const customized = buildCustomizedTemplate();
       if (!customized) return;
 
-      // 1. Save to localStorage (quick fallback)
       saveUserCustomizedTemplate(userId, selectedTemplateId, customized);
 
-      // 2. Save to folder (cross‑browser sync)
       try {
         const dirHandle = await getFolderHandle();
         const fileName = `template_${selectedTemplateId}_user_${userId}.json`;
@@ -147,7 +143,7 @@ export default function CustomizedParent() {
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
       } catch (err) {
-        console.warn('Folder save failed – maybe permission lost?', err);
+        console.warn('Folder save failed', err);
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
       }
@@ -220,7 +216,6 @@ export default function CustomizedParent() {
 
   const applyColorVariables = (colors) => {
     document.documentElement.style.setProperty('--accent-color', colors.accentColor || '#14b8a6');
-   
     document.documentElement.style.setProperty('--button-bg', colors.buttonBg || '#14b8a6');
     document.documentElement.style.setProperty('--text-color', colors.textColor || '#1f2937');
     document.documentElement.style.setProperty('--card-bg', colors.cardBg || 'rgba(255,255,255,0.1)');
@@ -282,7 +277,6 @@ export default function CustomizedParent() {
 
   useEffect(() => {
     document.documentElement.style.setProperty('--accent-color', accentColor);
-
     document.documentElement.style.setProperty('--button-bg', buttonBg);
     document.documentElement.style.setProperty('--text-color', textColor);
     document.documentElement.style.setProperty('--card-bg', cardBg);
@@ -294,6 +288,11 @@ export default function CustomizedParent() {
       document.documentElement.setAttribute('data-theme', theme);
     }
   }, [theme, themeScope]);
+
+  // ==================== PREVIEW FULL‑SCREEN TOGGLE ====================
+  const handlePreview = () => {
+    setViewFullScreen(prev => !prev);
+  };
 
   // ==================== BUILD CURRENT CUSTOMIZATION ====================
   const buildCustomizedTemplate = () => {
@@ -396,47 +395,35 @@ export default function CustomizedParent() {
   };
 
   const handleResetToOriginal = async () => {
-  if (window.confirm('Reset to original template? All customizations lost.')) {
-    if (userId && originalTemplate) {
-      // 1. Clear localStorage (existing reset)
-      resetUserTemplate(userId, selectedTemplateId, originalTemplate);
-
-      // 2. Delete the file from the user‑selected folder
-      try {
-        const dirHandle = await getFolderHandle();
-        const fileName = `template_${selectedTemplateId}_user_${userId}.json`;
-        const fileHandle = await dirHandle.getFileHandle(fileName);
-        await fileHandle.remove(); // removes the file from disk
-        console.log(`Deleted ${fileName} from folder.`);
-      } catch (err) {
-        // File might not exist – that's fine
-        console.warn('No file to delete in folder (or permission issue)', err);
+    if (window.confirm('Reset to original template? All customizations lost.')) {
+      if (userId && originalTemplate) {
+        resetUserTemplate(userId, selectedTemplateId, originalTemplate);
+        try {
+          const dirHandle = await getFolderHandle();
+          const fileName = `template_${selectedTemplateId}_user_${userId}.json`;
+          const fileHandle = await dirHandle.getFileHandle(fileName);
+          await fileHandle.remove();
+        } catch (err) { /* ignore */ }
+        const resetTemplate = loadUserCustomizedTemplate(userId, selectedTemplateId, originalTemplate);
+        setLoadedTemplate(resetTemplate);
+        setTextOverrides({
+          homeTagline: '', homeDescription: '', homeSubtitle: '', homePrimaryCta: '', homeImage: '',
+          aboutTitle: '', aboutVision: '', aboutLeadership: '', aboutHistory: '', aboutCampusLife: '',
+          coursesTitle: '', coursesEngineering: '', coursesManagement: '', coursesDataScience: '', coursesDesign: '',
+          achievementsTitle: '', achievementsList: [],
+          contactTitle: '', contactAddress: '', contactPhone: '', contactEmail: '',
+          navigationItems: [],
+          shoppingHeroTitle: '', shoppingHeroSubtitle: '', shoppingButtonStart: '', shoppingButtonJoin: '',
+          shoppingCategoriesTitle: '', shoppingProductsTitle: '', shoppingSearchPlaceholder: '',
+          shoppingStat1Label: '', shoppingStat2Label: '', shoppingStat3Label: '',
+          statProducts: 0, statCustomers: 0, statStores: 0,
+          categories: [], products: [],
+        });
+        setHasUnsavedChanges(false);
+        alert('✅ Reset to original. Saved file removed from folder.');
       }
-
-      // 3. Reload the original template into state
-      const resetTemplate = loadUserCustomizedTemplate(userId, selectedTemplateId, originalTemplate);
-      setLoadedTemplate(resetTemplate);
-
-      // 4. Reset all text overrides to empty
-      setTextOverrides({
-        homeTagline: '', homeDescription: '', homeSubtitle: '', homePrimaryCta: '', homeImage: '',
-        aboutTitle: '', aboutVision: '', aboutLeadership: '', aboutHistory: '', aboutCampusLife: '',
-        coursesTitle: '', coursesEngineering: '', coursesManagement: '', coursesDataScience: '', coursesDesign: '',
-        achievementsTitle: '', achievementsList: [],
-        contactTitle: '', contactAddress: '', contactPhone: '', contactEmail: '',
-        navigationItems: [],
-        shoppingHeroTitle: '', shoppingHeroSubtitle: '', shoppingButtonStart: '', shoppingButtonJoin: '',
-        shoppingCategoriesTitle: '', shoppingProductsTitle: '', shoppingSearchPlaceholder: '',
-        shoppingStat1Label: '', shoppingStat2Label: '', shoppingStat3Label: '',
-        statProducts: 0, statCustomers: 0, statStores: 0,
-        categories: [], products: [],
-      });
-
-      setHasUnsavedChanges(false);
-      alert('✅ Reset to original. Saved file removed from folder.');
     }
-  }
-};
+  };
 
   // ==================== PREPARE DATA FOR PREVIEW ====================
   const shoppingContentData = loadedTemplate ? {
@@ -559,22 +546,64 @@ export default function CustomizedParent() {
   // ==================== MAIN RENDER ====================
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', position: 'fixed', top: 0, left: 0 }}>
-      <CustomizationPanel
-        isOverlayDesign={isOverlayDesign}
-        customColors={{ accentColor, overlayBg, buttonBg, cardBg, cardBorder, textColor, descriptionColor, logoColor, menuColor, menuHoverColor, primaryColor, headerBg, footerBg }}
-        onColorChange={handleColorChange}
-        onReset={handleReset}
-        templateData={loadedTemplate}
-        onTextChange={handleTextChangeFromPanel}
-        onExportJSON={handleGenerateJSON}
-        user={user}
-        onResetToOriginal={handleResetToOriginal}
-        isSaving={isSaving}
-        hasUnsavedChanges={hasUnsavedChanges}
-        lastSaved={lastSaved}
-      />
+      {/* Customization Panel – hidden in full‑screen mode */}
+      {!viewFullScreen && (
+        <CustomizationPanel
+          isOverlayDesign={isOverlayDesign}
+          customColors={{ accentColor, overlayBg, buttonBg, cardBg, cardBorder, textColor, descriptionColor, logoColor, menuColor, menuHoverColor, primaryColor, headerBg, footerBg }}
+          onColorChange={handleColorChange}
+          onReset={handleReset}
+          templateData={loadedTemplate}
+          onTextChange={handleTextChangeFromPanel}
+          onExportJSON={handleGenerateJSON}
+          user={user}
+          onResetToOriginal={handleResetToOriginal}
+          isSaving={isSaving}
+          hasUnsavedChanges={hasUnsavedChanges}
+          lastSaved={lastSaved}
+          onHandlePreview={handlePreview}
+        />
+      )}
 
-      <div ref={previewRef} style={{ flex: 1, height: '100vh', display: 'flex', flexDirection: 'column', contain: 'layout', overflow: 'hidden', position: 'relative' }}>
+      {/* Preview area – takes full width when panel hidden */}
+      <div 
+        ref={previewRef} 
+        style={{ 
+          flex: 1, 
+          height: '100vh', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          contain: 'layout', 
+          overflow: 'hidden', 
+          position: 'relative',
+          width: viewFullScreen ? '100%' : 'auto'
+        }}
+      >
+        {/* Exit full‑screen button (only shown in full‑screen mode) */}
+        {viewFullScreen && (
+          <button
+            onClick={() => setViewFullScreen(false)}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              right: '20px',
+              zIndex: 200,
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              backdropFilter: 'blur(4px)',
+              fontFamily: 'sans-serif'
+            }}
+          >
+            ✕ Exit Full Screen
+          </button>
+        )}
+
         {isShoppingCart && (
           <>
             <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1920')", backgroundSize: 'cover', backgroundPosition: 'center', zIndex: 0 }} />
