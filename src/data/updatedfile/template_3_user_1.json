@@ -20,8 +20,8 @@
     {
       "id": "teal",
       "name": "Teal Coast",
-      "accentColor": "#14b8a6",
-      "buttonBg": "#14b8a6",
+      "accentColor": "#739692",
+      "buttonBg": "#28e6d0",
       "textColor": "#1f2937",
       "cardBg": "#ffffff",
       "cardBorder": "#e2e8f0",
@@ -192,7 +192,7 @@
   "id": 1,
   "isCustomized": true,
   "createdAt": "2026-06-11T08:01:00.391Z",
-  "lastModified": "2026-06-11T08:01:10.115Z",
+  "lastModified": "2026-07-11T08:57:07.284Z",
   "home": {},
   "about": {
     "sections": {}

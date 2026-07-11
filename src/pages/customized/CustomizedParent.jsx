@@ -582,6 +582,7 @@ export default function CustomizedParent() {
         {/* Exit full‑screen button (only shown in full‑screen mode) */}
         {viewFullScreen && (
           <button
+            type="button"  // <-- Added type="button" to prevent any accidental form submit
             onClick={() => setViewFullScreen(false)}
             style={{
               position: 'fixed',

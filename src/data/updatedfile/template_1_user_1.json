@@ -77,7 +77,7 @@
   "navigation": [
     {
       "name": "Home",
-      "label": "Homefvrrrrgff",
+      "label": "Homefvr",
       "type": "link"
     },
     {
@@ -157,6 +157,6 @@
   "id": 1,
   "isCustomized": true,
   "createdAt": "2026-06-11T07:47:38.311Z",
-  "lastModified": "2026-06-11T07:56:11.176Z",
+  "lastModified": "2026-07-11T08:43:54.679Z",
   "lastCustomized": "2026-06-11T07:48:28.973Z"
 }
